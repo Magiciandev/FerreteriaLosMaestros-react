@@ -49,7 +49,7 @@ function App() {
         <Route path="/checkout" element={<PaginaPendiente titulo="Finalizar compra" />} />
         <Route path="/pago/exitoso" element={<PaginaPendiente titulo="Compra realizada" />} />
         <Route path="/pago/error" element={<PaginaPendiente titulo="No se pudo realizar el pago" />} />
-        <Route path="*" element={<PaginaPendiente titulo="Página no encontrada" descripcion="La dirección no corresponde a ninguna vista." />} />
+        <Route path="*" element={<PaginaPendiente titulo="Página no encontrada" descripcion="La dirección no corresponde a ninguna página." />} />
       </Route>
 
       <Route path="/admin" element={<AdminLayout />}>

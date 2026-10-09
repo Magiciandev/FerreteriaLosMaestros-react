@@ -1,8 +1,8 @@
 import { Container } from "react-bootstrap";
 
 // Marcador de posición para las vistas que todavía no se construyen.
-// Recibe el título y una descripción por props; se irá reemplazando fase a fase.
-function PaginaPendiente({ titulo, descripcion = "Esta vista se construye en una fase siguiente." }) {
+// Recibe el título y, opcionalmente, una descripción por props.
+function PaginaPendiente({ titulo, descripcion = "Contenido no disponible." }) {
   return (
     <Container className="py-5">
       <h1>{titulo}</h1>

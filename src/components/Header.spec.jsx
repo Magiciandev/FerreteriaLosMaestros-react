@@ -10,6 +10,11 @@ const categorias = [
 const cliente = { nombre: "Victor Navarrete", tipo: "cliente", rol: "Cliente" };
 const empleado = { nombre: "Admin Sistema", tipo: "empleado", rol: "Administrador" };
 
+// El menú de la cuenta es un desplegable: sus opciones solo existen en el DOM una vez abierto.
+function abrirMenuCuenta(nombre) {
+  fireEvent.click(screen.getByText(`Hola, ${nombre}`));
+}
+
 describe("Header", () => {
   describe("props", () => {
     it("muestra la cantidad del carrito recibida por props", () => {
@@ -19,32 +24,45 @@ describe("Header", () => {
     });
   });
 
+  describe("menú principal", () => {
+    it("incluye Productos y Ofertas, y deja Blog y Contacto para el pie de página", () => {
+      renderConRouter(<Header categorias={categorias} />);
+
+      expect(screen.getByRole("link", { name: "Productos" })).toBeTruthy();
+      expect(screen.getByRole("link", { name: "Ofertas" })).toBeTruthy();
+      expect(screen.queryByRole("link", { name: "Blog" })).toBeNull();
+      expect(screen.queryByRole("link", { name: "Contacto" })).toBeNull();
+    });
+  });
+
   describe("renderizado condicional según la sesión", () => {
-    it("sin sesión muestra Iniciar sesión y Crear cuenta, pero no Cerrar sesión", () => {
+    it("sin sesión muestra Iniciar sesión y Crear cuenta, y no el saludo", () => {
       renderConRouter(<Header categorias={categorias} sesion={null} />);
 
       expect(screen.getByRole("link", { name: "Iniciar sesión" })).toBeTruthy();
       expect(screen.getByRole("link", { name: "Crear cuenta" })).toBeTruthy();
-      expect(screen.queryByRole("button", { name: "Cerrar sesión" })).toBeNull();
+      expect(screen.queryByText(/^Hola,/)).toBeNull();
     });
 
     it("con sesión saluda con el primer nombre y oculta Iniciar sesión", () => {
       renderConRouter(<Header categorias={categorias} sesion={cliente} />);
 
       expect(screen.getByText("Hola, Victor")).toBeTruthy();
-      expect(screen.getByRole("button", { name: "Cerrar sesión" })).toBeTruthy();
       expect(screen.queryByRole("link", { name: "Iniciar sesión" })).toBeNull();
     });
 
     it("el enlace al panel de administración aparece solo para empleados", () => {
       renderConRouter(<Header categorias={categorias} sesion={empleado} />);
+      abrirMenuCuenta("Admin");
 
       expect(screen.getByRole("link", { name: "Panel de administración" })).toBeTruthy();
     });
 
-    it("un cliente no ve el enlace al panel de administración", () => {
+    it("un cliente ve Mi perfil pero no el panel de administración", () => {
       renderConRouter(<Header categorias={categorias} sesion={cliente} />);
+      abrirMenuCuenta("Victor");
 
+      expect(screen.getByRole("link", { name: "Mi perfil" })).toBeTruthy();
       expect(screen.queryByRole("link", { name: "Panel de administración" })).toBeNull();
     });
   });
@@ -53,8 +71,9 @@ describe("Header", () => {
     it("al pulsar Cerrar sesión ejecuta la función recibida por props", () => {
       const onCerrarSesion = jasmine.createSpy("onCerrarSesion");
       renderConRouter(<Header categorias={categorias} sesion={cliente} onCerrarSesion={onCerrarSesion} />);
+      abrirMenuCuenta("Victor");
 
-      fireEvent.click(screen.getByRole("button", { name: "Cerrar sesión" }));
+      fireEvent.click(screen.getByText("Cerrar sesión"));
 
       expect(onCerrarSesion).toHaveBeenCalledTimes(1);
     });

@@ -24,7 +24,7 @@ function AdminLayout() {
                 {seccion.etiqueta}
               </Nav.Link>
             ))}
-            <Nav.Link as={NavLink} to="/" className="mt-3">← Volver a la tienda</Nav.Link>
+            <Nav.Link as={NavLink} to="/" className="mt-3">Volver a la tienda</Nav.Link>
           </Nav>
         </Col>
         <Col xs={12} md={9} lg={10}>
