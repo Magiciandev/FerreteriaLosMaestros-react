@@ -1,7 +1,7 @@
 # Ferretería Los Maestros (React)
 
-Evaluación Parcial 2 · Desarrollo FullStack II (DSY1104). Migración de la tienda de la
-Fase 1 (HTML + CSS + JS) a React + Bootstrap, con pruebas unitarias en Jasmine y Karma.
+Evaluación Parcial 2 - Desarrollo FullStack II (DSY1104). Migración de la tienda de la
+Fase 1 (HTML + CSS + JS) a React + Bootstrap.
 
 ## Cómo ejecutarlo
 
@@ -12,38 +12,42 @@ npm run build        # compila a /dist
 npm run lint         # revisión estática con oxlint
 ```
 
-## Pruebas (Jasmine + Karma)
-
-```bash
-npm test             # Karma + Chrome sin ventana (requiere Chrome instalado) + cobertura
-npm run test:watch   # Chrome con ventana, se re-ejecuta al guardar
-npm run test:jsdom   # sin Chrome: usa jsdom (DOM simulado en Node)
-```
-
-El reporte de cobertura queda en `coverage/html/index.html`.
-Las pruebas viven junto al código que prueban: `Header.jsx` -> `Header.spec.jsx`.
-
 ## Estructura
 
 ```
 src/
-  components/   piezas reutilizables (Header, Footer, ...) y sus *.spec.jsx
+  components/   piezas reutilizables (Header, Footer, ...)
   layouts/      estructuras con <Outlet />: Layout (tienda) y AdminLayout (panel)
-  pages/        una vista por ruta (se llena desde la Fase 3)
-  data/         datos semilla de la Fase 1 (productos, categorías, usuarios)
-  utils/        funciones puras: formato CLP, lectura/escritura en localStorage
-  App.jsx       estado global (sesión, carrito) y tabla de rutas
-karma.conf.cjs  configuración del entorno de pruebas
+  pages/        una vista por ruta
+  data/         base de datos simulada
+    baseDeDatos.js   colecciones y diccionario de datos
+    coleccion.js     fábrica de CRUD (listar, obtener, crear, actualizar, eliminar)
+    *.json           datos iniciales; regiones.js: regiones y comunas
+  hooks/        useColeccion: conecta una colección con el estado de React
+  utils/        funciones puras: formato CLP, localStorage, validaciones, helpers de producto
+  App.jsx       estado global (sesión, carrito, colecciones) y tabla de rutas
 ```
+
+## Base de datos simulada
+
+Cada colección (productos, categorías, usuarios, órdenes, blog, consultas) se guarda en
+`localStorage` y expone las operaciones CRUD. La primera vez se copia el `.json` inicial.
+Para volver a los datos de fábrica, desde la consola del navegador: `localStorage.clear()`
+y recargar.
+
+Cambios respecto a los datos de la Fase 1: los productos ya no guardan `categoriaLabel`
+(el nombre se obtiene de la categoría) y tienen un campo `descuento` (12 productos en
+oferta); los usuarios son un solo arreglo con `tipo` y `rol`.
 
 ## Estado de las fases
 
-- [x] Fase 1: esqueleto, rutas, navbar responsive, entorno Karma + Jasmine (17 pruebas)
-- [ ] Fase 2: archivo de datos con CRUD + persistencia
-- [ ] Fase 3: tienda · Fase 4: cuenta · Fase 5: compra · Fase 6: administración
-- [ ] Fase 7: suite final de pruebas · Fase 8: ERS V2, cobertura y entrega
+- [x] Fase 1: esqueleto, rutas y navbar responsive
+- [x] Fase 2: base de datos simulada con CRUD, validaciones y helpers
+- [ ] Fase 3: tienda - Fase 4: cuenta - Fase 5: compra - Fase 6: administración
+- [ ] Pruebas unitarias: por definir según el ejemplo visto en clases
+- [ ] Cierre: ERS V2, documento de cobertura y entrega
 
 ## Convención de commits (un integrante por funcionalidad)
 
-`feat:` funcionalidad nueva · `test:` pruebas · `fix:` corrección · `docs:` documentación
-Ejemplo: `feat(header): navbar con buscador y menú de categorías`
+`feat:` funcionalidad nueva - `test:` pruebas - `fix:` corrección - `docs:` documentación
+Ejemplo: `feat(datos): colección de productos con CRUD`

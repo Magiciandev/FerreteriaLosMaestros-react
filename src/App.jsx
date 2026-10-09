@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Route, Routes } from "react-router-dom";
 import PaginaPendiente from "./components/PaginaPendiente";
-import categorias from "./data/categorias.json";
+import { categoriasDB } from "./data/baseDeDatos";
+import { useColeccion } from "./hooks/useColeccion";
 import AdminLayout from "./layouts/AdminLayout";
 import Layout from "./layouts/Layout";
 import { borrarClave, guardarJSON, leerJSON } from "./utils/almacenamiento";
@@ -10,6 +11,10 @@ function App() {
   // Estado global de la aplicación. Vive en App y baja a los hijos por props.
   // Se inicializa desde localStorage para que sobreviva a recargar la página.
   const [sesion, setSesion] = useState(() => leerJSON("sesionActual", null));
+  // Colecciones de la base de datos simulada, conectadas al estado de React.
+  // Las demás (productos, usuarios, órdenes, blog) se conectan aquí a medida que las
+  // vistas las necesitan.
+  const categorias = useColeccion(categoriasDB);
   // carrito: arreglo de { idProducto, cantidad }. Se conecta a los botones en la Fase 3.
   const [carrito] = useState(() => leerJSON("carrito", []));
 
@@ -26,7 +31,7 @@ function App() {
       <Route
         element={
           <Layout
-            categorias={categorias}
+            categorias={categorias.items}
             cantidadCarrito={cantidadCarrito}
             sesion={sesion}
             onCerrarSesion={() => setSesion(null)}

@@ -1,0 +1,28 @@
+[
+  {
+    "id": "B001",
+    "titulo": "Cómo elegir el cemento adecuado para tu obra",
+    "resumen": "Qué mirar antes de comprar, cómo revisar los sacos y cómo guardarlos para que rindan.",
+    "autor": "Equipo Los Maestros",
+    "fecha": "2026-09-12",
+    "contenido": [
+      "Antes de comprar, define qué vas a construir. Para trabajos menores como radieres, reparaciones de muros o pegado de elementos, un cemento de uso general en saco de 25 kg suele ser suficiente. Para estructuras que reciben carga, como pilares o fundaciones, conviene consultar al profesional a cargo de la obra, que indicará el tipo de cemento y la dosificación.",
+      "Revisa la fecha de fabricación del saco. El cemento absorbe humedad con el tiempo y va perdiendo capacidad, así que mientras más reciente, mejor. Rechaza sacos rotos, húmedos o con grumos duros que no se deshacen al presionarlos con la mano.",
+      "Calcula la cantidad con margen. Es preferible comprar algo más de lo estimado que interrumpir el trabajo a medio camino, pero evita acumular sacos durante meses. Si no estás seguro del cálculo, tráenos las medidas de la superficie y te orientamos.",
+      "Guarda el cemento sobre una tarima de madera, lejos de muros húmedos y cubierto con plástico. Usa guantes y lentes de seguridad al manipularlo."
+    ]
+  },
+  {
+    "id": "B002",
+    "titulo": "Herramientas básicas para tu primera reparación en casa",
+    "resumen": "Un set mínimo y bien elegido para resolver la mayoría de los arreglos del hogar.",
+    "autor": "Equipo Los Maestros",
+    "fecha": "2026-09-26",
+    "contenido": [
+      "No necesitas un taller completo para resolver la mayoría de los arreglos del hogar. Un set básico bien elegido cubre desde colgar un cuadro hasta cambiar la llave de un lavamanos.",
+      "Para medir y marcar, una huincha de medir de 5 metros y un nivel pequeño. Para ajustar y fijar, un martillo de carpintero, destornilladores plano y de cruz en varios tamaños, un alicate universal y una llave ajustable.",
+      "Si harás perforaciones en muros de hormigón o albañilería, un taladro percutor con brocas para concreto marca la diferencia. Compra las brocas del diámetro de los tarugos que vas a usar.",
+      "Suma elementos de protección: guantes de trabajo, lentes de seguridad y, para polvo o pintura, una mascarilla adecuada. Guarda todo ordenado y fuera del alcance de los niños."
+    ]
+  }
+]

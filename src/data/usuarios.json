@@ -1,19 +1,22 @@
-{
-  "empleados": [
-    {
-      "nombre": "Admin",
-      "apellidos": "Sistema",
-      "correo": "admin@profesor.duoc.cl",
-      "password": "admin1234",
-      "rol": "Administrador"
-    },
-    {
-      "nombre": "Vendedor",
-      "apellidos": "Sistema",
-      "correo": "vendedor@duoc.cl",
-      "password": "vend1234",
-      "rol": "Vendedor"
-    }
-  ],
-  "clientes": []
-}
+[
+  {
+    "id": "U001",
+    "tipo": "empleado",
+    "rol": "Administrador",
+    "run": null,
+    "nombre": "Admin",
+    "apellidos": "Sistema",
+    "correo": "admin@profesor.duoc.cl",
+    "password": "admin1234"
+  },
+  {
+    "id": "U002",
+    "tipo": "empleado",
+    "rol": "Vendedor",
+    "run": null,
+    "nombre": "Vendedor",
+    "apellidos": "Sistema",
+    "correo": "vendedor@duoc.cl",
+    "password": "vend1234"
+  }
+]
