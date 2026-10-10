@@ -39,6 +39,12 @@ h1, h2, h3, h4, h5, h6, .marca {
 .encabezado .marca { color: var(--color-amarillo); letter-spacing: 0.02em; }
 .encabezado .nav-link.active { color: var(--color-amarillo); }
 
+/* Encabezado: el buscador tiene un ancho fijo en pantallas grandes para que todo quepa en una sola línea. */
+@media (min-width: 992px) {
+  .encabezado .buscador .form-control { width: 14rem; }
+}
+.encabezado .dropdown-menu { min-width: 12rem; }
+
 .pie-sitio { background: var(--color-grafito); color: #e5e5e5; }
 .pie-sitio a { color: var(--color-amarillo); }
 .pie-legal { color: #a8a8a8; font-size: 0.875rem; }
