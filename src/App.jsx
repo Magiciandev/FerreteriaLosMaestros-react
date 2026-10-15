@@ -1,30 +1,59 @@
 import { useEffect, useState } from "react";
 import { Route, Routes } from "react-router-dom";
 import PaginaPendiente from "./components/PaginaPendiente";
-import { categoriasDB } from "./data/baseDeDatos";
+import { blogDB, categoriasDB, consultasDB, productosDB } from "./data/baseDeDatos";
 import { useColeccion } from "./hooks/useColeccion";
 import AdminLayout from "./layouts/AdminLayout";
 import Layout from "./layouts/Layout";
+import Blog from "./pages/Blog";
+import Categoria from "./pages/Categoria";
+import Categorias from "./pages/Categorias";
+import Contacto from "./pages/Contacto";
+import DetalleBlog from "./pages/DetalleBlog";
+import DetalleProducto from "./pages/DetalleProducto";
+import Inicio from "./pages/Inicio";
+import NoEncontrada from "./pages/NoEncontrada";
+import Nosotros from "./pages/Nosotros";
+import Ofertas from "./pages/Ofertas";
+import Productos from "./pages/Productos";
 import { borrarClave, guardarJSON, leerJSON } from "./utils/almacenamiento";
+import { agregarItem, contarItems } from "./utils/carrito";
 
 function App() {
-  // Estado global de la aplicación. Vive en App y baja a los hijos por props.
+  // Estado global de la aplicación. Vive en App y baja a las páginas por props.
   // Se inicializa desde localStorage para que sobreviva a recargar la página.
   const [sesion, setSesion] = useState(() => leerJSON("sesionActual", null));
-  // Colecciones de la base de datos simulada, conectadas al estado de React.
-  // Las demás (productos, usuarios, órdenes, blog) se conectan aquí a medida que las
-  // vistas las necesitan.
-  const categorias = useColeccion(categoriasDB);
-  // carrito: arreglo de { idProducto, cantidad }. Se conecta a los botones en la Fase 3.
-  const [carrito] = useState(() => leerJSON("carrito", []));
+  // carrito: arreglo de { idProducto, cantidad }.
+  const [carrito, setCarrito] = useState(() => leerJSON("carrito", []));
+  // Aviso que se muestra al agregar un producto al carrito.
+  const [aviso, setAviso] = useState({ mensaje: "", visible: false });
 
-  // Cada vez que cambia la sesión, se guarda (o se borra) en localStorage.
+  // Colecciones de la base de datos simulada, conectadas al estado de React.
+  // Las demás (usuarios, órdenes) se conectan aquí cuando las vistas las necesiten.
+  const productos = useColeccion(productosDB);
+  const categorias = useColeccion(categoriasDB);
+  const blog = useColeccion(blogDB);
+
+  // Cada vez que cambia la sesión o el carrito, se guardan (o se borran) en localStorage.
   useEffect(() => {
     if (sesion) guardarJSON("sesionActual", sesion);
     else borrarClave("sesionActual");
   }, [sesion]);
 
-  const cantidadCarrito = carrito.reduce((total, item) => total + item.cantidad, 0);
+  useEffect(() => {
+    guardarJSON("carrito", carrito);
+  }, [carrito]);
+
+  // Agrega un producto al carrito (sin superar su stock) y avisa al usuario.
+  function agregarAlCarrito(producto, cantidad = 1) {
+    setCarrito((actual) => agregarItem(actual, producto.id, cantidad, producto.stock));
+    setAviso({ mensaje: `${producto.nombre} se agregó al carrito.`, visible: true });
+  }
+
+  // Guarda el mensaje del formulario de contacto en la base de datos simulada.
+  function enviarConsulta(datos) {
+    consultasDB.crear({ ...datos, fecha: new Date().toISOString() });
+  }
 
   return (
     <Routes>
@@ -32,21 +61,24 @@ function App() {
         element={
           <Layout
             categorias={categorias.items}
-            cantidadCarrito={cantidadCarrito}
+            cantidadCarrito={contarItems(carrito)}
             sesion={sesion}
             onCerrarSesion={() => setSesion(null)}
+            aviso={aviso}
+            onCerrarAviso={() => setAviso((actual) => ({ ...actual, visible: false }))}
           />
         }
       >
-        <Route path="/" element={<PaginaPendiente titulo="Inicio" />} />
-        <Route path="/productos" element={<PaginaPendiente titulo="Productos" />} />
-        <Route path="/productos/:id" element={<PaginaPendiente titulo="Detalle de producto" />} />
-        <Route path="/categorias/:slug" element={<PaginaPendiente titulo="Categoría" />} />
-        <Route path="/ofertas" element={<PaginaPendiente titulo="Ofertas" />} />
-        <Route path="/nosotros" element={<PaginaPendiente titulo="Nosotros" />} />
-        <Route path="/blog" element={<PaginaPendiente titulo="Blog" />} />
-        <Route path="/blog/:id" element={<PaginaPendiente titulo="Detalle del blog" />} />
-        <Route path="/contacto" element={<PaginaPendiente titulo="Contacto" />} />
+        <Route path="/" element={<Inicio productos={productos.items} categorias={categorias.items} onAgregar={agregarAlCarrito} />} />
+        <Route path="/productos" element={<Productos productos={productos.items} categorias={categorias.items} onAgregar={agregarAlCarrito} />} />
+        <Route path="/productos/:id" element={<DetalleProducto productos={productos.items} categorias={categorias.items} onAgregar={agregarAlCarrito} />} />
+        <Route path="/categorias" element={<Categorias categorias={categorias.items} productos={productos.items} />} />
+        <Route path="/categorias/:slug" element={<Categoria categorias={categorias.items} productos={productos.items} onAgregar={agregarAlCarrito} />} />
+        <Route path="/ofertas" element={<Ofertas productos={productos.items} onAgregar={agregarAlCarrito} />} />
+        <Route path="/nosotros" element={<Nosotros categorias={categorias.items} />} />
+        <Route path="/blog" element={<Blog entradas={blog.items} />} />
+        <Route path="/blog/:id" element={<DetalleBlog entradas={blog.items} />} />
+        <Route path="/contacto" element={<Contacto onEnviar={enviarConsulta} />} />
         <Route path="/login" element={<PaginaPendiente titulo="Iniciar sesión" />} />
         <Route path="/registro" element={<PaginaPendiente titulo="Crear cuenta" />} />
         <Route path="/perfil" element={<PaginaPendiente titulo="Mi perfil" />} />
@@ -54,7 +86,7 @@ function App() {
         <Route path="/checkout" element={<PaginaPendiente titulo="Finalizar compra" />} />
         <Route path="/pago/exitoso" element={<PaginaPendiente titulo="Compra realizada" />} />
         <Route path="/pago/error" element={<PaginaPendiente titulo="No se pudo realizar el pago" />} />
-        <Route path="*" element={<PaginaPendiente titulo="Página no encontrada" descripcion="La dirección no corresponde a ninguna página." />} />
+        <Route path="*" element={<NoEncontrada />} />
       </Route>
 
       <Route path="/admin" element={<AdminLayout />}>
@@ -75,7 +107,7 @@ function App() {
         <Route path="usuarios/:id/editar" element={<PaginaPendiente titulo="Editar usuario" />} />
         <Route path="reportes" element={<PaginaPendiente titulo="Reportes" />} />
         <Route path="perfil" element={<PaginaPendiente titulo="Perfil" />} />
-        <Route path="*" element={<PaginaPendiente titulo="Página no encontrada" />} />
+        <Route path="*" element={<NoEncontrada />} />
       </Route>
     </Routes>
   );

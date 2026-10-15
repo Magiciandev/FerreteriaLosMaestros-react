@@ -59,3 +59,24 @@ h1, h2, h3, h4, h5, h6, .marca {
 }
 .salto-contenido:focus { left: 0; }
 :focus-visible { outline: 3px solid var(--color-amarillo); outline-offset: 2px; }
+
+/* Portada de la página de inicio. */
+.portada { background: var(--color-grafito); color: #fff; border-bottom: 4px solid var(--color-amarillo); }
+.portada h1 { color: var(--color-amarillo); }
+
+/* Tarjetas de producto: imagen en recuadro 4:3 y precio de lista tachado. */
+.imagen-producto { background: #e4e4e0; }
+.imagen-producto img { object-fit: cover; }
+.imagen-producto__vacia { display: flex; align-items: center; justify-content: center; color: #5c5c57; font-size: 0.875rem; }
+.precio-lista { text-decoration: line-through; color: #5c5c57; }
+.tarjeta-producto a, .tarjeta-categoria a { color: inherit; text-decoration: none; }
+.tarjeta-producto a:hover, .tarjeta-categoria a:hover { text-decoration: underline; }
+.tarjeta-categoria { transition: border-color 0.15s, box-shadow 0.15s; }
+.tarjeta-categoria:hover { border-color: var(--color-amarillo); box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.12); }
+
+/* Selector de cantidad del detalle de producto. */
+.campo-cantidad { width: 9rem; }
+
+/* Texto de lectura cómoda para las entradas del blog. */
+.articulo-blog { max-width: 46rem; }
+.articulo-blog p { line-height: 1.7; }
