@@ -5,6 +5,8 @@ import { blogDB, categoriasDB, consultasDB, productosDB } from "./data/baseDeDat
 import { useColeccion } from "./hooks/useColeccion";
 import AdminLayout from "./layouts/AdminLayout";
 import Layout from "./layouts/Layout";
+import AdminCategoriaForm from "./pages/admin/AdminCategoriaForm"; 
+import AdminCategorias from "./pages/admin/AdminCategorias";  
 import Blog from "./pages/Blog";
 import Categoria from "./pages/Categoria";
 import Categorias from "./pages/Categorias";
@@ -18,8 +20,7 @@ import Ofertas from "./pages/Ofertas";
 import Productos from "./pages/Productos";
 import { borrarClave, guardarJSON, leerJSON } from "./utils/almacenamiento";
 import { agregarItem, contarItems } from "./utils/carrito";
-/* import AdminCategoriaForm from "./pages/admin/AdminCategoriaForm";  este import hay que verificarlo, corresponde*/
-import AdminCategorias from "./pages/admin/AdminCategorias";
+
 
 function App() {
   // Estado global de la aplicación. Vive en App y baja a las páginas por props.
@@ -100,9 +101,9 @@ function App() {
         <Route path="productos/criticos" element={<PaginaPendiente titulo="Productos con stock crítico" />} />
         <Route path="productos/:id" element={<PaginaPendiente titulo="Detalle de producto" />} />
         <Route path="productos/:id/editar" element={<PaginaPendiente titulo="Editar producto" />} />
-        <Route path="categorias" element={<AdminCategorias categorias={categorias.items} productos={productos.items} onEliminar={categorias.eliminar} />} />
-        <Route path="categorias/nueva" element={<AdminCategoriaForm categorias={categorias.items} onCrear={categorias.crear} />} />
-        <Route path="categorias/:id/editar" element={<AdminCategoriaForm categorias={categorias.items} onActualizar={categorias.actualizar} />} />
+        <Route path="categorias" element={<PaginaPendiente titulo="Categorías" />} />
+        <Route path="categorias/nueva" element={<PaginaPendiente titulo="Nueva categoría" />} />
+        <Route path="categorias/:id/editar" element={<PaginaPendiente titulo="Editar categoría" />} />
         <Route path="usuarios" element={<PaginaPendiente titulo="Usuarios" />} />
         <Route path="usuarios/nuevo" element={<PaginaPendiente titulo="Nuevo usuario" />} />
         <Route path="usuarios/:id" element={<PaginaPendiente titulo="Detalle de usuario" />} />
