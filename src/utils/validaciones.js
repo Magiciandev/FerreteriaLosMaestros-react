@@ -139,3 +139,18 @@ export function validarDescuento(valor) {
   if (dato === "") return "";
   return /^\d+$/.test(dato) && Number(dato) <= 90 ? "" : "El descuento debe ser un entero entre 0 y 90.";
 }
+
+// ---------- Checkout ----------
+export function validarOpcionEntrega(valor) {
+  return texto(valor) ? "" : "Elige cómo quieres recibir tu compra.";
+}
+
+// Opcional: puede quedar vacío; si viene, máximo 30 caracteres.
+export function validarDepartamento(valor) {
+  return texto(valor).length <= 30 ? "" : "El departamento admite máximo 30 caracteres.";
+}
+
+// Opcional: puede quedar vacío; si viene, máximo 300 caracteres.
+export function validarIndicaciones(valor) {
+  return texto(valor).length <= 300 ? "" : "Las indicaciones admiten máximo 300 caracteres.";
+}

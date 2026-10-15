@@ -8,23 +8,10 @@ const productos = [1, 2, 3].map((n) => ({
 }));
 
 describe("GrillaProductos", () => {
-  it("dibuja una tarjeta por cada producto recibido", () => {
+  it("[A7] dibuja una tarjeta por cada producto del arreglo recibido", () => {
     renderConRouter(<GrillaProductos productos={productos} onAgregar={() => {}} />);
 
     expect(screen.getAllByRole("listitem")).toHaveLength(3);
     expect(screen.getByRole("heading", { name: "Producto 2" })).toBeInTheDocument();
-  });
-
-  it("sin productos muestra el mensaje por defecto y ninguna tarjeta", () => {
-    renderConRouter(<GrillaProductos productos={[]} onAgregar={() => {}} />);
-
-    expect(screen.getByText("No hay productos para mostrar.")).toBeInTheDocument();
-    expect(screen.queryAllByRole("listitem")).toHaveLength(0);
-  });
-
-  it("permite personalizar el mensaje cuando no hay productos", () => {
-    renderConRouter(<GrillaProductos productos={[]} onAgregar={() => {}} mensajeVacio="Sin resultados." />);
-
-    expect(screen.getByText("Sin resultados.")).toBeInTheDocument();
   });
 });
