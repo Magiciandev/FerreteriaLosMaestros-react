@@ -2,13 +2,15 @@ import { useEffect, useState } from "react";
 import { Route, Routes } from "react-router-dom";
 import PaginaPendiente from "./components/PaginaPendiente";
 import RutaProtegida from "./components/RutaProtegida";
-import { blogDB, categoriasDB, consultasDB, productosDB, usuariosDB } from "./data/baseDeDatos";
+import { blogDB, categoriasDB, consultasDB, ordenesDB, productosDB, usuariosDB } from "./data/baseDeDatos";
 import { useColeccion } from "./hooks/useColeccion";
 import AdminLayout from "./layouts/AdminLayout";
 import Layout from "./layouts/Layout";
 import Blog from "./pages/Blog";
+import Carrito from "./pages/Carrito";
 import Categoria from "./pages/Categoria";
 import Categorias from "./pages/Categorias";
+import Checkout from "./pages/Checkout";
 import Contacto from "./pages/Contacto";
 import DetalleBlog from "./pages/DetalleBlog";
 import DetalleProducto from "./pages/DetalleProducto";
@@ -17,12 +19,15 @@ import Login from "./pages/Login";
 import NoEncontrada from "./pages/NoEncontrada";
 import Nosotros from "./pages/Nosotros";
 import Ofertas from "./pages/Ofertas";
+import PagoError from "./pages/PagoError";
+import PagoExitoso from "./pages/PagoExitoso";
 import Perfil from "./pages/Perfil";
 import Productos from "./pages/Productos";
 import Registro from "./pages/Registro";
 import { autenticar, crearSesion, encontrarDuplicado } from "./services/autenticacion";
+import { construirOrden } from "./services/compras";
 import { borrarClave, guardarJSON, leerJSON } from "./utils/almacenamiento";
-import { agregarItem, contarItems } from "./utils/carrito";
+import { agregarItem, cambiarCantidad, contarItems, detallarCarrito, quitarItem } from "./utils/carrito";
 
 function App() {
   // Estado global de la aplicación. Vive en App y baja a las páginas por props.
@@ -39,6 +44,7 @@ function App() {
   const categorias = useColeccion(categoriasDB);
   const blog = useColeccion(blogDB);
   const usuarios = useColeccion(usuariosDB);
+  const ordenes = useColeccion(ordenesDB);
 
   // Cada vez que cambia la sesión o el carrito, se guardan (o se borran) en localStorage.
   useEffect(() => {
@@ -54,6 +60,33 @@ function App() {
   function agregarAlCarrito(producto, cantidad = 1) {
     setCarrito((actual) => agregarItem(actual, producto.id, cantidad, producto.stock));
     setAviso({ mensaje: `${producto.nombre} se agregó al carrito.`, visible: true });
+  }
+
+  // El carrito guarda solo { idProducto, cantidad }; para mostrarlo se reconstruye contra el
+  // catálogo actual (precios con oferta, stock al día).
+  const lineasCarrito = detallarCarrito(carrito, productos.items);
+
+  function cambiarCantidadCarrito(idProducto, cantidad) {
+    const producto = productos.items.find((item) => item.id === idProducto);
+    setCarrito((actual) => cambiarCantidad(actual, idProducto, cantidad, producto?.stock ?? 0));
+  }
+
+  function quitarDelCarrito(idProducto) {
+    setCarrito((actual) => quitarItem(actual, idProducto));
+  }
+
+  // Registra el intento de compra como una orden. Si el pago fue aprobado, descuenta el stock de
+  // cada producto y vacía el carrito; si fue rechazado, deja todo como estaba (el carrito se
+  // conserva para reintentar). Devuelve la orden guardada.
+  function confirmarCompra(datos, aprobado) {
+    const orden = ordenes.crear(construirOrden({ datos, lineas: lineasCarrito, aprobado, idUsuario: sesion?.id ?? null }));
+    if (aprobado) {
+      for (const linea of lineasCarrito) {
+        productos.actualizar(linea.idProducto, { stock: linea.stock - linea.cantidad });
+      }
+      setCarrito([]);
+    }
+    return orden;
   }
 
   // Inicia sesión si el correo y la contraseña coinciden con un usuario. Devuelve true o false.
@@ -123,10 +156,16 @@ function App() {
             element={<Perfil usuario={usuarios.items.find((usuario) => usuario.id === sesion?.id)} onGuardar={actualizarPerfil} />}
           />
         </Route>
-        <Route path="/carrito" element={<PaginaPendiente titulo="Carrito de compras" />} />
-        <Route path="/checkout" element={<PaginaPendiente titulo="Finalizar compra" />} />
-        <Route path="/pago/exitoso" element={<PaginaPendiente titulo="Compra realizada" />} />
-        <Route path="/pago/error" element={<PaginaPendiente titulo="No se pudo realizar el pago" />} />
+        <Route
+          path="/carrito"
+          element={<Carrito lineas={lineasCarrito} onCambiarCantidad={cambiarCantidadCarrito} onQuitar={quitarDelCarrito} onVaciar={() => setCarrito([])} />}
+        />
+        <Route
+          path="/checkout"
+          element={<Checkout lineas={lineasCarrito} usuario={usuarios.items.find((usuario) => usuario.id === sesion?.id)} onConfirmar={confirmarCompra} />}
+        />
+        <Route path="/pago/exitoso" element={<PagoExitoso ordenes={ordenes.items} />} />
+        <Route path="/pago/error" element={<PagoError ordenes={ordenes.items} />} />
         <Route path="*" element={<NoEncontrada />} />
       </Route>
 

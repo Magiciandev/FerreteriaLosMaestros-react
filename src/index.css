@@ -80,3 +80,12 @@ h1, h2, h3, h4, h5, h6, .marca {
 /* Texto de lectura cómoda para las entradas del blog. */
 .articulo-blog { max-width: 46rem; }
 .articulo-blog p { line-height: 1.7; }
+
+/* Control de cantidad del carrito. */
+.cantidad-valor { min-width: 2rem; text-align: center; }
+
+/* Al imprimir la boleta solo queda el contenido: sin menú, pie, avisos ni botones. */
+@media print {
+  .encabezado, .pie-sitio, .salto-contenido, .toast-container, .no-imprimir { display: none !important; }
+  body { background: #fff; }
+}

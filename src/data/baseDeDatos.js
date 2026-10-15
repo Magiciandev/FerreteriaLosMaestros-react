@@ -25,9 +25,10 @@ import usuariosSemilla from "./usuarios.json";
  *               ("particular" | "contratista") · region · comuna · direccion
  *
  * ordenesDB     id (ORD-0001...) · fecha (ISO) · estado ("pagada" | "rechazada")
- *               cliente { nombre, apellidos, correo } · entrega { calle, depto, region, comuna,
- *               indicaciones, despacho } · items [{ idProducto, nombre, precioUnitario,
- *               cantidad, subtotal }] · total · idUsuario (si compró con sesión, si no null)
+ *               cliente { nombre, apellidos, correo } · entrega { tipo ("retiro" | "domicilio" |
+ *               "obra"), calle, departamento, region, comuna, indicaciones } · items [{ idProducto,
+ *               nombre, precioUnitario, cantidad, subtotal }] · total · idUsuario (si compró con
+ *               sesión, si no null). Un pago rechazado también queda registrado.
  *
  * blogDB        id · titulo · resumen · autor · fecha · contenido (arreglo de párrafos)
  *
