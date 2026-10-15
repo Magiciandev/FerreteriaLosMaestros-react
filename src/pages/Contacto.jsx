@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Alert, Button, Col, Container, Form, Row } from "react-bootstrap";
 import CampoFormulario from "../components/CampoFormulario";
+import { useFormulario } from "../hooks/useFormulario";
 import { validarCorreo, validarMensajeContacto, validarNombreContacto } from "../utils/validaciones";
 
 const VACIO = { nombre: "", correo: "", mensaje: "" };
@@ -14,36 +15,30 @@ const VALIDADORES = {
 
 // Formulario de contacto controlado.
 // Prop: onEnviar(datos), que guarda el mensaje (aquí, en la base de datos simulada).
-// Estado propio: los valores de los campos, los errores y si el último envío fue exitoso.
-// Los errores aparecen al salir de un campo (onBlur) y desaparecen apenas el valor es válido.
+// Los valores y errores los maneja useFormulario; este componente solo guarda si el último
+// envío fue exitoso. Los errores aparecen al salir de un campo y desaparecen al corregirlo.
 function Contacto({ onEnviar }) {
-  const [datos, setDatos] = useState(VACIO);
-  const [errores, setErrores] = useState({});
+  const formulario = useFormulario(VACIO, VALIDADORES);
   const [enviado, setEnviado] = useState(false);
 
-  function cambiar(campo) {
-    return (evento) => {
-      const valor = evento.target.value;
-      setDatos((actual) => ({ ...actual, [campo]: valor }));
-      setEnviado(false);
-      if (errores[campo]) setErrores((actual) => ({ ...actual, [campo]: VALIDADORES[campo](valor) }));
+  // Igual que formulario.campo(), pero además oculta el aviso de éxito al volver a escribir.
+  function campo(nombre) {
+    return {
+      ...formulario.campo(nombre),
+      onChange: (evento) => {
+        setEnviado(false);
+        formulario.cambiar(nombre, evento.target.value);
+      },
     };
-  }
-
-  function salirDeCampo(campo) {
-    return () => setErrores((actual) => ({ ...actual, [campo]: VALIDADORES[campo](datos[campo]) }));
   }
 
   function enviar(evento) {
     evento.preventDefault();
-    const nuevosErrores = {};
-    for (const campo of Object.keys(VALIDADORES)) nuevosErrores[campo] = VALIDADORES[campo](datos[campo]);
-    setErrores(nuevosErrores);
-    if (Object.values(nuevosErrores).some(Boolean)) return;
+    if (!formulario.validarTodo()) return;
 
-    onEnviar({ nombre: datos.nombre.trim(), correo: datos.correo.trim(), mensaje: datos.mensaje.trim() });
-    setDatos(VACIO);
-    setErrores({});
+    const { nombre, correo, mensaje } = formulario.datos;
+    onEnviar({ nombre: nombre.trim(), correo: correo.trim(), mensaje: mensaje.trim() });
+    formulario.reiniciar();
     setEnviado(true);
   }
 
@@ -58,35 +53,15 @@ function Contacto({ onEnviar }) {
             </Alert>
           )}
           <Form noValidate onSubmit={enviar} aria-label="Formulario de contacto">
-            <CampoFormulario
-              id="contacto-nombre"
-              etiqueta="Nombre"
-              valor={datos.nombre}
-              error={errores.nombre}
-              onChange={cambiar("nombre")}
-              onBlur={salirDeCampo("nombre")}
-              autoComplete="name"
-            />
-            <CampoFormulario
-              id="contacto-correo"
-              etiqueta="Correo"
-              tipo="email"
-              valor={datos.correo}
-              error={errores.correo}
-              onChange={cambiar("correo")}
-              onBlur={salirDeCampo("correo")}
-              autoComplete="email"
-            />
+            <CampoFormulario id="contacto-nombre" etiqueta="Nombre" autoComplete="name" {...campo("nombre")} />
+            <CampoFormulario id="contacto-correo" etiqueta="Correo" tipo="email" autoComplete="email" {...campo("correo")} />
             <CampoFormulario
               id="contacto-mensaje"
               etiqueta="Mensaje"
               como="textarea"
               filas={5}
-              valor={datos.mensaje}
-              error={errores.mensaje}
-              ayuda={`Entre 20 y 500 caracteres (${datos.mensaje.length}/500).`}
-              onChange={cambiar("mensaje")}
-              onBlur={salirDeCampo("mensaje")}
+              ayuda={`Entre 20 y 500 caracteres (${formulario.datos.mensaje.length}/500).`}
+              {...campo("mensaje")}
             />
             <Button type="submit" variant="primary">Enviar mensaje</Button>
           </Form>
