@@ -19,3 +19,10 @@ export function formatearFecha(iso) {
     year: "numeric",
   });
 }
+
+// "2026-10-16T14:30:00.000Z" -> "16-10-2026 11:30:00" (según la zona horaria del navegador).
+// Las órdenes guardan la fecha completa (con hora), a diferencia de formatearFecha, que
+// recibe solo el día.
+export function formatearFechaHora(iso) {
+  return new Date(iso).toLocaleString("es-CL");
+}

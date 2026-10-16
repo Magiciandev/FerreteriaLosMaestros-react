@@ -65,6 +65,13 @@ export function validarTipoCliente(valor) {
   return valor === "particular" || valor === "contratista" ? "" : "Selecciona si eres Particular o Contratista.";
 }
 
+// Rol de una cuenta (lo elige el Administrador al crear o editar un usuario).
+export const ROLES = ["Administrador", "Vendedor", "Cliente"];
+
+export function validarRol(valor) {
+  return ROLES.includes(valor) ? "" : "Selecciona un rol.";
+}
+
 // ---------- Dirección ----------
 export function validarRegion(valor) {
   return texto(valor) ? "" : "Selecciona una región.";
@@ -108,6 +115,16 @@ export function validarCodigoProducto(valor) {
 export function validarNombreProducto(valor) {
   const largo = texto(valor).length;
   return largo > 0 && largo <= 100 ? "" : "El nombre es obligatorio (máximo 100 caracteres).";
+}
+
+// Fábrica de validadores para los textos cortos del producto (subcategoría, marca, unidad).
+// Los tres siguen la misma regla (obligatorio, con un máximo), así que en vez de escribir tres
+// funciones casi iguales se crea cada una con su etiqueta: validarTextoCorto("La marca").
+export function validarTextoCorto(etiqueta, maximo = 50) {
+  return (valor) => {
+    const largo = texto(valor).length;
+    return largo > 0 && largo <= maximo ? "" : `${etiqueta} es obligatoria (máximo ${maximo} caracteres).`;
+  };
 }
 
 export function validarDescripcionProducto(valor) {

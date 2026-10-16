@@ -23,7 +23,7 @@ function AdminLayout({ sesion = null }) {
   return (
     <Container fluid className="py-3">
       <Row>
-        <Col xs={12} md={3} lg={2} className="mb-3">
+        <Col xs={12} md={3} lg={2} className="mb-3 no-imprimir">
           {sesion && (
             <p className="small text-secondary mb-2">
               {sesion.nombre} {sesion.apellidos} ({sesion.rol})
