@@ -26,11 +26,16 @@ export function calcularDigitoVerificador(cuerpo) {
 
 // Sin puntos ni guion, 7 a 9 caracteres (cuerpo de 6 a 8 dígitos + dígito verificador).
 export function validarRun(valor) {
-  const limpio = texto(valor).toUpperCase();
+  // Limpia puntos, guiones, espacios y convierte a mayúsculas
+  const limpio = texto(valor).replace(/[\.\-\s]/g, "").toUpperCase();
   const mensaje = "RUN inválido. Ingresa sin puntos ni guion (ej: 12345678K) y verifica el dígito verificador.";
+  
   if (!/^[0-9]{6,8}[0-9K]$/.test(limpio)) return mensaje;
+  
   const cuerpo = limpio.slice(0, -1);
-  return calcularDigitoVerificador(cuerpo) === limpio.slice(-1) ? "" : mensaje;
+  const dvIngresado = limpio.slice(-1);
+  
+  return calcularDigitoVerificador(cuerpo) === dvIngresado ? "" : mensaje;
 }
 
 // ---------- Datos de persona ----------
