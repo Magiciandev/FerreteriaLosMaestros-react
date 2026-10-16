@@ -1,11 +1,23 @@
 import { useEffect, useState } from "react";
 import { Route, Routes } from "react-router-dom";
-import PaginaPendiente from "./components/PaginaPendiente";
 import RutaProtegida from "./components/RutaProtegida";
 import { blogDB, categoriasDB, consultasDB, ordenesDB, productosDB, usuariosDB } from "./data/baseDeDatos";
 import { useColeccion } from "./hooks/useColeccion";
 import AdminLayout from "./layouts/AdminLayout";
 import Layout from "./layouts/Layout";
+import AdminCategoriaForm from "./pages/admin/AdminCategoriaForm";
+import AdminCategorias from "./pages/admin/AdminCategorias";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminOrdenDetalle from "./pages/admin/AdminOrdenDetalle";
+import AdminOrdenes from "./pages/admin/AdminOrdenes";
+import AdminProductoDetalle from "./pages/admin/AdminProductoDetalle";
+import AdminProductoForm from "./pages/admin/AdminProductoForm";
+import AdminProductos from "./pages/admin/AdminProductos";
+import AdminProductosCriticos from "./pages/admin/AdminProductosCriticos";
+import AdminReportes from "./pages/admin/AdminReportes";
+import AdminUsuarioDetalle from "./pages/admin/AdminUsuarioDetalle";
+import AdminUsuarioForm from "./pages/admin/AdminUsuarioForm";
+import AdminUsuarios from "./pages/admin/AdminUsuarios";
 import Blog from "./pages/Blog";
 import Carrito from "./pages/Carrito";
 import Categoria from "./pages/Categoria";
@@ -28,6 +40,7 @@ import { autenticar, crearSesion, encontrarDuplicado } from "./services/autentic
 import { construirOrden } from "./services/compras";
 import { borrarClave, guardarJSON, leerJSON } from "./utils/almacenamiento";
 import { agregarItem, cambiarCantidad, contarItems, detallarCarrito, quitarItem } from "./utils/carrito";
+
 
 function App() {
   // Estado global de la aplicación. Vive en App y baja a las páginas por props.
@@ -65,6 +78,9 @@ function App() {
   // El carrito guarda solo { idProducto, cantidad }; para mostrarlo se reconstruye contra el
   // catálogo actual (precios con oferta, stock al día).
   const lineasCarrito = detallarCarrito(carrito, productos.items);
+
+  // Solo el Administrador crea, edita y elimina en el panel; el Vendedor únicamente consulta.
+  const esAdministrador = sesion?.rol === "Administrador";
 
   function cambiarCantidadCarrito(idProducto, cantidad) {
     const producto = productos.items.find((item) => item.id === idProducto);
@@ -117,6 +133,15 @@ function App() {
   function actualizarPerfil(cambios) {
     usuarios.actualizar(sesion.id, cambios);
     setSesion((actual) => ({ ...actual, nombre: cambios.nombre, apellidos: cambios.apellidos }));
+  }
+
+  // Edición de un usuario desde el panel. Si el Administrador edita su propia cuenta, la sesión
+  // se actualiza con los datos nuevos para que el menú no muestre el nombre anterior.
+  function actualizarUsuario(id, cambios) {
+    usuarios.actualizar(id, cambios);
+    if (sesion?.id === id) {
+      setSesion((actual) => ({ ...actual, nombre: cambios.nombre, apellidos: cambios.apellidos, correo: cambios.correo }));
+    }
   }
 
   // Guarda el mensaje del formulario de contacto en la base de datos simulada.
@@ -173,25 +198,61 @@ function App() {
           detalle); el resto es solo del Administrador (RF-09). */}
       <Route path="/admin" element={<RutaProtegida sesion={sesion} roles={["Administrador", "Vendedor"]} />}>
         <Route element={<AdminLayout sesion={sesion} />}>
-          <Route index element={<PaginaPendiente titulo="Dashboard" />} />
-          <Route path="ordenes" element={<PaginaPendiente titulo="Órdenes y boletas" />} />
-          <Route path="ordenes/:id" element={<PaginaPendiente titulo="Boleta" />} />
-          <Route path="productos" element={<PaginaPendiente titulo="Productos" />} />
-          <Route path="productos/:id" element={<PaginaPendiente titulo="Detalle de producto" />} />
-          <Route path="perfil" element={<PaginaPendiente titulo="Perfil" />} />
+          <Route
+            index
+            element={<AdminDashboard productos={productos.items} ordenes={ordenes.items} usuarios={usuarios.items} esAdministrador={esAdministrador} />}
+          />
+          <Route path="ordenes" element={<AdminOrdenes ordenes={ordenes.items} />} />
+          <Route path="ordenes/:id" element={<AdminOrdenDetalle ordenes={ordenes.items} esAdministrador={esAdministrador} />} />
+          <Route
+            path="productos"
+            element={<AdminProductos productos={productos.items} categorias={categorias.items} esAdministrador={esAdministrador} onEliminar={productos.eliminar} />}
+          />
+          <Route
+            path="productos/:id"
+            element={<AdminProductoDetalle productos={productos.items} categorias={categorias.items} esAdministrador={esAdministrador} />}
+          />
+          {/* Mismo componente que el perfil de la tienda: para el personal muestra sus datos
+              (se administran desde Usuarios). */}
+          <Route
+            path="perfil"
+            element={<Perfil usuario={usuarios.items.find((usuario) => usuario.id === sesion?.id)} onGuardar={actualizarPerfil} />}
+          />
 
           <Route element={<RutaProtegida sesion={sesion} roles={["Administrador"]} />}>
-            <Route path="productos/nuevo" element={<PaginaPendiente titulo="Nuevo producto" />} />
-            <Route path="productos/criticos" element={<PaginaPendiente titulo="Productos con stock crítico" />} />
-            <Route path="productos/:id/editar" element={<PaginaPendiente titulo="Editar producto" />} />
-            <Route path="categorias" element={<PaginaPendiente titulo="Categorías" />} />
-            <Route path="categorias/nueva" element={<PaginaPendiente titulo="Nueva categoría" />} />
-            <Route path="categorias/:id/editar" element={<PaginaPendiente titulo="Editar categoría" />} />
-            <Route path="usuarios" element={<PaginaPendiente titulo="Usuarios" />} />
-            <Route path="usuarios/nuevo" element={<PaginaPendiente titulo="Nuevo usuario" />} />
-            <Route path="usuarios/:id" element={<PaginaPendiente titulo="Detalle de usuario" />} />
-            <Route path="usuarios/:id/editar" element={<PaginaPendiente titulo="Editar usuario" />} />
-            <Route path="reportes" element={<PaginaPendiente titulo="Reportes" />} />
+            {/* El mismo formulario sirve para crear (sin :id) y editar (con :id). */}
+            <Route
+              path="productos/nuevo"
+              element={<AdminProductoForm productos={productos.items} categorias={categorias.items} onCrear={productos.crear} onActualizar={productos.actualizar} />}
+            />
+            <Route path="productos/criticos" element={<AdminProductosCriticos productos={productos.items} categorias={categorias.items} />} />
+            <Route
+              path="productos/:id/editar"
+              element={<AdminProductoForm productos={productos.items} categorias={categorias.items} onCrear={productos.crear} onActualizar={productos.actualizar} />}
+            />
+            <Route
+              path="categorias"
+              element={<AdminCategorias categorias={categorias.items} productos={productos.items} onEliminar={categorias.eliminar} />}
+            />
+            <Route
+              path="categorias/nueva"
+              element={<AdminCategoriaForm categorias={categorias.items} onCrear={categorias.crear} onActualizar={categorias.actualizar} />}
+            />
+            <Route
+              path="categorias/:id/editar"
+              element={<AdminCategoriaForm categorias={categorias.items} onCrear={categorias.crear} onActualizar={categorias.actualizar} />}
+            />
+            <Route path="usuarios" element={<AdminUsuarios usuarios={usuarios.items} sesion={sesion} onEliminar={usuarios.eliminar} />} />
+            <Route
+              path="usuarios/nuevo"
+              element={<AdminUsuarioForm usuarios={usuarios.items} sesion={sesion} onCrear={usuarios.crear} onActualizar={actualizarUsuario} />}
+            />
+            <Route path="usuarios/:id" element={<AdminUsuarioDetalle usuarios={usuarios.items} ordenes={ordenes.items} />} />
+            <Route
+              path="usuarios/:id/editar"
+              element={<AdminUsuarioForm usuarios={usuarios.items} sesion={sesion} onCrear={usuarios.crear} onActualizar={actualizarUsuario} />}
+            />
+            <Route path="reportes" element={<AdminReportes ordenes={ordenes.items} productos={productos.items} categorias={categorias.items} />} />
           </Route>
 
           <Route path="*" element={<NoEncontrada />} />

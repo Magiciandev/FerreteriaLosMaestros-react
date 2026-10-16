@@ -26,11 +26,16 @@ export function calcularDigitoVerificador(cuerpo) {
 
 // Sin puntos ni guion, 7 a 9 caracteres (cuerpo de 6 a 8 dígitos + dígito verificador).
 export function validarRun(valor) {
-  const limpio = texto(valor).toUpperCase();
+  // Limpia puntos, guiones, espacios y convierte a mayúsculas
+  const limpio = texto(valor).replace(/[\.\-\s]/g, "").toUpperCase();
   const mensaje = "RUN inválido. Ingresa sin puntos ni guion (ej: 12345678K) y verifica el dígito verificador.";
+  
   if (!/^[0-9]{6,8}[0-9K]$/.test(limpio)) return mensaje;
+  
   const cuerpo = limpio.slice(0, -1);
-  return calcularDigitoVerificador(cuerpo) === limpio.slice(-1) ? "" : mensaje;
+  const dvIngresado = limpio.slice(-1);
+  
+  return calcularDigitoVerificador(cuerpo) === dvIngresado ? "" : mensaje;
 }
 
 // ---------- Datos de persona ----------
@@ -63,6 +68,13 @@ export function validarFechaNacimiento(valor) {
 
 export function validarTipoCliente(valor) {
   return valor === "particular" || valor === "contratista" ? "" : "Selecciona si eres Particular o Contratista.";
+}
+
+// Rol de una cuenta (lo elige el Administrador al crear o editar un usuario).
+export const ROLES = ["Administrador", "Vendedor", "Cliente"];
+
+export function validarRol(valor) {
+  return ROLES.includes(valor) ? "" : "Selecciona un rol.";
 }
 
 // ---------- Dirección ----------
@@ -108,6 +120,16 @@ export function validarCodigoProducto(valor) {
 export function validarNombreProducto(valor) {
   const largo = texto(valor).length;
   return largo > 0 && largo <= 100 ? "" : "El nombre es obligatorio (máximo 100 caracteres).";
+}
+
+// Fábrica de validadores para los textos cortos del producto (subcategoría, marca, unidad).
+// Los tres siguen la misma regla (obligatorio, con un máximo), así que en vez de escribir tres
+// funciones casi iguales se crea cada una con su etiqueta: validarTextoCorto("La marca").
+export function validarTextoCorto(etiqueta, maximo = 50) {
+  return (valor) => {
+    const largo = texto(valor).length;
+    return largo > 0 && largo <= maximo ? "" : `${etiqueta} es obligatoria (máximo ${maximo} caracteres).`;
+  };
 }
 
 export function validarDescripcionProducto(valor) {
