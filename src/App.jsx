@@ -6,8 +6,6 @@ import { blogDB, categoriasDB, consultasDB, ordenesDB, productosDB, usuariosDB }
 import { useColeccion } from "./hooks/useColeccion";
 import AdminLayout from "./layouts/AdminLayout";
 import Layout from "./layouts/Layout";
-import AdminCategoriaForm from "./pages/admin/AdminCategoriaForm"; 
-import AdminCategorias from "./pages/admin/AdminCategorias";  
 import Blog from "./pages/Blog";
 import Carrito from "./pages/Carrito";
 import Categoria from "./pages/Categoria";
@@ -30,7 +28,6 @@ import { autenticar, crearSesion, encontrarDuplicado } from "./services/autentic
 import { construirOrden } from "./services/compras";
 import { borrarClave, guardarJSON, leerJSON } from "./utils/almacenamiento";
 import { agregarItem, cambiarCantidad, contarItems, detallarCarrito, quitarItem } from "./utils/carrito";
-
 
 function App() {
   // Estado global de la aplicación. Vive en App y baja a las páginas por props.
