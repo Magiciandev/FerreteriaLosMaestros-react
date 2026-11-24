@@ -1,8 +1,0 @@
-diff --git a/.env.production b/.env.production
-new file mode 100644
-index 0000000..afa7aa6
---- /dev/null
-+++ b/.env.production
-@@ -0,0 +1,2 @@
-+VITE_AUTH_API_URL=/api/auth-service
-+VITE_API_URL=/api/tienda-service
