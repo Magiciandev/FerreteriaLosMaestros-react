@@ -1,4 +1,3 @@
-import { Badge } from "react-bootstrap";
 import { esStockCritico, estaDisponible, tieneOferta } from "../utils/productos";
 
 // Etiquetas que describen el estado del producto: descuento, sin stock o últimas unidades.
@@ -7,10 +6,10 @@ function InsigniasProducto({ producto }) {
   const disponible = estaDisponible(producto);
   return (
     <div className="d-flex flex-wrap gap-1">
-      {tieneOferta(producto) && <Badge bg="danger">-{producto.descuento}%</Badge>}
-      {!disponible && <Badge bg="secondary">Sin stock</Badge>}
+      {tieneOferta(producto) && <span className="badge text-bg-danger">-{producto.descuento}%</span>}
+      {!disponible && <span className="badge text-bg-secondary">Sin stock</span>}
       {disponible && esStockCritico(producto) && (
-        <Badge bg="warning" text="dark">Últimas unidades</Badge>
+        <span className="badge text-bg-warning">Últimas unidades</span>
       )}
     </div>
   );

@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { Alert, Breadcrumb, Button, Col, Container, Row } from "react-bootstrap";
+import { Button, Col, Container, Row } from "react-bootstrap";
 import { Link, useParams } from "react-router-dom";
 import CampoFormulario from "../components/CampoFormulario";
 import ImagenProducto from "../components/ImagenProducto";
 import InsigniasProducto from "../components/InsigniasProducto";
 import PrecioProducto from "../components/PrecioProducto";
-import { estaDisponible, nombreCategoria } from "../utils/productos";
+import { nombreCategoria } from "../utils/categorias";
+import { estaDisponible } from "../utils/productos";
 
 // Detalle de un producto: ficha, precio y selector de cantidad para agregar al carrito.
 // El id sale de la URL (/productos/:id). Props: productos, categorias y
@@ -33,11 +34,13 @@ function DetalleProducto({ productos, categorias, onAgregar }) {
 
   return (
     <Container className="py-4">
-      <Breadcrumb>
-        <Breadcrumb.Item linkAs={Link} linkProps={{ to: "/" }}>Inicio</Breadcrumb.Item>
-        <Breadcrumb.Item linkAs={Link} linkProps={{ to: "/productos" }}>Productos</Breadcrumb.Item>
-        <Breadcrumb.Item active>{producto.nombre}</Breadcrumb.Item>
-      </Breadcrumb>
+      <nav aria-label="Ruta de navegación">
+        <ol className="breadcrumb">
+          <li className="breadcrumb-item"><Link to="/">Inicio</Link></li>
+          <li className="breadcrumb-item"><Link to="/productos">Productos</Link></li>
+          <li className="breadcrumb-item active" aria-current="page">{producto.nombre}</li>
+        </ol>
+      </nav>
 
       <Row className="g-4">
         <Col xs={12} md={5}>
@@ -90,7 +93,7 @@ function DetalleProducto({ productos, categorias, onAgregar }) {
               </Button>
             </div>
           ) : (
-            <Alert variant="warning">Este producto no tiene stock por ahora.</Alert>
+            <div className="alert alert-warning">Este producto no tiene stock por ahora.</div>
           )}
         </Col>
       </Row>

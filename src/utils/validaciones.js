@@ -27,7 +27,7 @@ export function calcularDigitoVerificador(cuerpo) {
 // Sin puntos ni guion, 7 a 9 caracteres (cuerpo de 6 a 8 dígitos + dígito verificador).
 export function validarRun(valor) {
   // Limpia puntos, guiones, espacios y convierte a mayúsculas
-  const limpio = texto(valor).replace(/[\.\-\s]/g, "").toUpperCase();
+  const limpio = texto(valor).replace(/[.\-\s]/g, "").toUpperCase();
   const mensaje = "RUN inválido. Ingresa sin puntos ni guion (ej: 12345678K) y verifica el dígito verificador.";
   
   if (!/^[0-9]{6,8}[0-9K]$/.test(limpio)) return mensaje;
@@ -71,7 +71,11 @@ export function validarTipoCliente(valor) {
 }
 
 // Rol de una cuenta (lo elige el Administrador al crear o editar un usuario).
-export const ROLES = ["Administrador", "Vendedor", "Cliente"];
+export const ROLES = ["ADMIN", "VENDEDOR", "CLIENTE"];
+
+// Nombre que se muestra en pantalla para cada rol (el servidor los entrega en mayúsculas).
+const ETIQUETAS_ROL = { ADMIN: "Administrador", VENDEDOR: "Vendedor", CLIENTE: "Cliente" };
+export const etiquetaRol = (rol) => ETIQUETAS_ROL[rol] ?? rol;
 
 export function validarRol(valor) {
   return ROLES.includes(valor) ? "" : "Selecciona un rol.";
@@ -114,7 +118,8 @@ export function validarMensajeContacto(valor) {
 
 // ---------- Producto (panel de administración) ----------
 export function validarCodigoProducto(valor) {
-  return texto(valor).length >= 3 ? "" : "El código debe tener al menos 3 caracteres.";
+  const largo = texto(valor).length;
+  return largo >= 3 && largo <= 30 ? "" : "El código debe tener entre 3 y 30 caracteres.";
 }
 
 export function validarNombreProducto(valor) {
@@ -140,19 +145,22 @@ export function validarCategoria(valor) {
   return texto(valor) ? "" : "Selecciona una categoría.";
 }
 
+// El servidor guarda el precio y el stock como enteros de 32 bits: sin decimales y hasta este valor.
+const ENTERO_MAXIMO = 2147483647;
+const esEnteroValido = (dato) => /^\d+$/.test(dato) && Number(dato) <= ENTERO_MAXIMO;
+
 export function validarPrecio(valor) {
-  const numero = Number(texto(valor));
-  return texto(valor) !== "" && !Number.isNaN(numero) && numero >= 0 ? "" : "Ingresa un precio válido (mínimo 0).";
+  return esEnteroValido(texto(valor)) ? "" : "Ingresa un precio entero válido en pesos (mínimo 0).";
 }
 
 export function validarStock(valor) {
-  return /^\d+$/.test(texto(valor)) ? "" : "Ingresa un stock entero válido (mínimo 0).";
+  return esEnteroValido(texto(valor)) ? "" : "Ingresa un stock entero válido (mínimo 0).";
 }
 
 // Opcional: vacío es válido; si viene, entero mayor o igual a 0.
 export function validarStockMinimo(valor) {
   const dato = texto(valor);
-  return dato === "" || /^\d+$/.test(dato) ? "" : "El stock crítico debe ser un entero mayor o igual a 0.";
+  return dato === "" || esEnteroValido(dato) ? "" : "El stock crítico debe ser un entero mayor o igual a 0.";
 }
 
 // Descuento de oferta: entero entre 0 y 90 (vacío cuenta como 0).

@@ -13,7 +13,3 @@ export function leerJSON(clave, porDefecto) {
 export function guardarJSON(clave, valor) {
   localStorage.setItem(clave, JSON.stringify(valor));
 }
-
-export function borrarClave(clave) {
-  localStorage.removeItem(clave);
-}

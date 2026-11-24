@@ -1,4 +1,4 @@
-import { Alert, Col, Row } from "react-bootstrap";
+import { Col, Row } from "react-bootstrap";
 import TarjetaProducto from "./TarjetaProducto";
 
 // Lista de tarjetas de producto en una grilla que se adapta al ancho de la pantalla:
@@ -6,7 +6,7 @@ import TarjetaProducto from "./TarjetaProducto";
 // Si no hay productos, muestra un mensaje en lugar de una grilla vacía.
 function GrillaProductos({ productos, onAgregar, mensajeVacio = "No hay productos para mostrar." }) {
   if (productos.length === 0) {
-    return <Alert variant="light" className="border">{mensajeVacio}</Alert>;
+    return <div className="alert alert-light border">{mensajeVacio}</div>;
   }
   return (
     <Row as="ul" className="list-unstyled g-3 mb-0">

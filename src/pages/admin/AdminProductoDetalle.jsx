@@ -1,10 +1,11 @@
-import { Alert, Col, Row } from "react-bootstrap";
+import { Col, Row } from "react-bootstrap";
 import { Link, useParams } from "react-router-dom";
 import ImagenProducto from "../../components/ImagenProducto";
 import InsigniasProducto from "../../components/InsigniasProducto";
 import PrecioProducto from "../../components/PrecioProducto";
 import { formatearCLP } from "../../utils/formato";
-import { nombreCategoria, precioFinal, tieneOferta } from "../../utils/productos";
+import { nombreCategoria } from "../../utils/categorias";
+import { precioFinal, tieneOferta } from "../../utils/productos";
 
 // Ficha completa de un producto para el panel (ruta /admin/productos/:id). A diferencia del
 // detalle de la tienda no tiene carrito: muestra también los datos internos (código, stock
@@ -12,18 +13,17 @@ import { nombreCategoria, precioFinal, tieneOferta } from "../../utils/productos
 // Props:
 //   productos        -> arreglo de productos; el que se muestra se busca con el :id de la URL
 //   categorias       -> para mostrar el nombre de la categoría y no su identificador
-//   esAdministrador  -> solo el Administrador ve el botón Editar
 // No tiene estado propio: todo se calcula a partir de las props y de la URL.
-function AdminProductoDetalle({ productos, categorias, esAdministrador = false }) {
+function AdminProductoDetalle({ productos, categorias }) {
   const { id } = useParams();
   const producto = productos.find((actual) => actual.id === id);
 
   if (!producto) {
     return (
       <section>
-        <Alert variant="warning">
-          No encontramos el producto "{id}". <Alert.Link as={Link} to="/admin/productos">Volver al listado</Alert.Link>
-        </Alert>
+        <div className="alert alert-warning">
+          No encontramos el producto "{id}". <Link to="/admin/productos" className="alert-link">Volver al listado</Link>
+        </div>
       </section>
     );
   }
@@ -48,9 +48,7 @@ function AdminProductoDetalle({ productos, categorias, esAdministrador = false }
         <h1 id="titulo-admin-producto" className="h3 mb-0">{producto.nombre}</h1>
         <div className="d-flex gap-2">
           <Link to="/admin/productos" className="btn btn-outline-secondary">Volver al listado</Link>
-          {esAdministrador && (
-            <Link to={`/admin/productos/${producto.id}/editar`} className="btn btn-primary">Editar producto</Link>
-          )}
+          <Link to={`/admin/productos/${producto.id}/editar`} className="btn btn-primary">Editar producto</Link>
         </div>
       </div>
 

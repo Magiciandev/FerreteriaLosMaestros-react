@@ -1,4 +1,4 @@
-import { Col, ProgressBar, Row, Table } from "react-bootstrap";
+import { Col, Row } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import TarjetaMetrica from "../../components/TarjetaMetrica";
 import { productosMasVendidos, resumirCompras, resumirProductos, ventasPorCategoria } from "../../utils/estadisticas";
@@ -46,55 +46,61 @@ function AdminReportes({ ordenes, productos, categorias }) {
       ) : (
         <>
           <h2 className="h5">Productos más vendidos</h2>
-          <Table responsive hover size="sm" className="align-middle mb-4">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Producto</th>
-                <th className="text-end">Unidades</th>
-                <th className="text-end">Ingresos</th>
-              </tr>
-            </thead>
-            <tbody>
-              {masVendidos.map((fila, posicion) => (
-                <tr key={fila.idProducto}>
-                  <td>{posicion + 1}</td>
-                  <td>
-                    {/* Si el producto ya no existe, el nombre queda como texto sin enlace. */}
-                    {productos.some((producto) => producto.id === fila.idProducto)
-                      ? <Link to={`/admin/productos/${fila.idProducto}`}>{fila.nombre}</Link>
-                      : fila.nombre}
-                  </td>
-                  <td className="text-end">{fila.unidades}</td>
-                  <td className="text-end">{formatearCLP(fila.ingresos)}</td>
+          <div className="table-responsive">
+            <table className="table table-hover table-sm align-middle mb-4">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Producto</th>
+                  <th className="text-end">Unidades</th>
+                  <th className="text-end">Ingresos</th>
                 </tr>
-              ))}
-            </tbody>
-          </Table>
+              </thead>
+              <tbody>
+                {masVendidos.map((fila, posicion) => (
+                  <tr key={fila.idProducto}>
+                    <td>{posicion + 1}</td>
+                    <td>
+                      {/* Si el producto ya no existe, el nombre queda como texto sin enlace. */}
+                      {productos.some((producto) => producto.id === fila.idProducto)
+                        ? <Link to={`/admin/productos/${fila.idProducto}`}>{fila.nombre}</Link>
+                        : fila.nombre}
+                    </td>
+                    <td className="text-end">{fila.unidades}</td>
+                    <td className="text-end">{formatearCLP(fila.ingresos)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
           <h2 className="h5">Ventas por categoría</h2>
-          <Table responsive size="sm" className="align-middle">
-            <thead>
-              <tr>
-                <th>Categoría</th>
-                <th className="text-end">Unidades</th>
-                <th className="text-end">Ingresos</th>
-                <th style={{ minWidth: "10rem" }}>Participación</th>
-              </tr>
-            </thead>
-            <tbody>
-              {porCategoria.map((fila) => (
-                <tr key={fila.slug}>
-                  <td>{fila.etiqueta}</td>
-                  <td className="text-end">{fila.unidades}</td>
-                  <td className="text-end">{formatearCLP(fila.ingresos)}</td>
-                  <td>
-                    <ProgressBar now={fila.porcentaje} label={`${fila.porcentaje}%`} aria-label={`${fila.etiqueta}: ${fila.porcentaje}% de los ingresos`} />
-                  </td>
+          <div className="table-responsive">
+            <table className="table table-sm align-middle">
+              <thead>
+                <tr>
+                  <th>Categoría</th>
+                  <th className="text-end">Unidades</th>
+                  <th className="text-end">Ingresos</th>
+                  <th style={{ minWidth: "10rem" }}>Participación</th>
                 </tr>
-              ))}
-            </tbody>
-          </Table>
+              </thead>
+              <tbody>
+                {porCategoria.map((fila) => (
+                  <tr key={fila.slug}>
+                    <td>{fila.etiqueta}</td>
+                    <td className="text-end">{fila.unidades}</td>
+                    <td className="text-end">{formatearCLP(fila.ingresos)}</td>
+                    <td>
+                      <div className="progress" role="progressbar" aria-label={`${fila.etiqueta}: ${fila.porcentaje}% de los ingresos`} aria-valuenow={fila.porcentaje} aria-valuemin={0} aria-valuemax={100}>
+                        <div className="progress-bar" style={{ width: `${fila.porcentaje}%` }}>{`${fila.porcentaje}%`}</div>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </>
       )}
     </section>

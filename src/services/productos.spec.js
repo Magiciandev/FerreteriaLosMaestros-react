@@ -7,14 +7,10 @@ const productos = [
 ];
 
 describe("obtenerProductosCriticos", () => {
-  // MOCK ASÍNCRONO: un servicio falso con listar() controlado por la prueba. mockResolvedValue
-  // hace que listar() devuelva una promesa resuelta, como lo haría un servicio real.
-  it("[B2] devuelve solo los productos con stock crítico usando un servicio simulado", async () => {
+  it("A5 devuelve solo los productos con stock crítico usando un servicio simulado", async () => {
     const servicio = { listar: vi.fn().mockResolvedValue(productos) };
-
     const criticos = await obtenerProductosCriticos(servicio);
-
-    expect(criticos.map((producto) => producto.id)).toEqual(["A", "C"]);
+    expect(criticos.map((p) => p.id)).toEqual(["A", "C"]);
     expect(servicio.listar).toHaveBeenCalledTimes(1);
   });
 });

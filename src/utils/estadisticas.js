@@ -1,4 +1,5 @@
-import { esStockCritico, nombreCategoria } from "./productos";
+import { esStockCritico } from "./productos";
+import { nombreCategoria } from "./categorias";
 
 /*
  * Cálculos del dashboard y de los reportes. Son funciones puras: reciben los arreglos de
@@ -34,7 +35,7 @@ export function resumirProductos(productos) {
 
 // Resumen de cuentas: clientes y personal (Administrador y Vendedor).
 export function resumirUsuarios(usuarios) {
-  const clientes = usuarios.filter((usuario) => usuario.tipo === "cliente").length;
+  const clientes = usuarios.filter((usuario) => usuario.rol === "CLIENTE").length;
   return { total: usuarios.length, clientes, empleados: usuarios.length - clientes };
 }
 

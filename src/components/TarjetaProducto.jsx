@@ -1,4 +1,4 @@
-import { Button, Card } from "react-bootstrap";
+import { Button } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import { estaDisponible } from "../utils/productos";
 import ImagenProducto from "./ImagenProducto";
@@ -14,16 +14,16 @@ import PrecioProducto from "./PrecioProducto";
 function TarjetaProducto({ producto, onAgregar }) {
   const disponible = estaDisponible(producto);
   return (
-    <Card as="article" className="tarjeta-producto h-100 overflow-hidden">
+    <article className="card tarjeta-producto h-100 overflow-hidden">
       <ImagenProducto producto={producto} />
-      <Card.Body className="d-flex flex-column gap-2">
+      <div className="card-body d-flex flex-column gap-2">
         <InsigniasProducto producto={producto} />
-        <Card.Title as="h3" className="h6 mb-0">
+        <h3 className="card-title h6 mb-0">
           <Link to={`/productos/${producto.id}`}>{producto.nombre}</Link>
-        </Card.Title>
-        <Card.Text className="small text-secondary mb-0">
+        </h3>
+        <p className="card-text small text-secondary mb-0">
           {producto.marca} - {producto.unidad}
-        </Card.Text>
+        </p>
         <PrecioProducto producto={producto} />
         <Button
           variant="primary"
@@ -34,8 +34,8 @@ function TarjetaProducto({ producto, onAgregar }) {
         >
           Agregar al carrito
         </Button>
-      </Card.Body>
-    </Card>
+      </div>
+    </article>
   );
 }
 

@@ -1,4 +1,4 @@
-import { Card, Col, Container, Row } from "react-bootstrap";
+import { Col, Container, Row } from "react-bootstrap";
 
 const PERFILES = [
   {
@@ -32,12 +32,12 @@ function Nosotros({ categorias }) {
       <Row className="g-3 mt-2">
         {PERFILES.map((perfil) => (
           <Col key={perfil.titulo} xs={12} md={4}>
-            <Card className="h-100">
-              <Card.Body>
-                <Card.Title as="h2" className="h5">{perfil.titulo}</Card.Title>
-                <Card.Text>{perfil.texto}</Card.Text>
-              </Card.Body>
-            </Card>
+            <div className="card h-100">
+              <div className="card-body">
+                <h2 className="card-title h5">{perfil.titulo}</h2>
+                <p className="card-text">{perfil.texto}</p>
+              </div>
+            </div>
           </Col>
         ))}
       </Row>

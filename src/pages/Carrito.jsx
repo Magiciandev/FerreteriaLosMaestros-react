@@ -1,4 +1,4 @@
-import { Alert, Button, Container, Table } from "react-bootstrap";
+import { Button, Container } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import ControlCantidad from "../components/ControlCantidad";
 import { formatearCLP } from "../utils/formato";
@@ -16,7 +16,7 @@ function Carrito({ lineas, onCambiarCantidad, onQuitar, onVaciar }) {
     return (
       <Container className="py-5">
         <h1>Carrito de compras</h1>
-        <Alert variant="light" className="border">Tu carrito está vacío.</Alert>
+        <div className="alert alert-light border">Tu carrito está vacío.</div>
         <Link to="/productos" className="btn btn-primary">Ver productos</Link>
       </Container>
     );
@@ -26,9 +26,10 @@ function Carrito({ lineas, onCambiarCantidad, onQuitar, onVaciar }) {
     <Container className="py-4">
       <h1 className="mb-3">Carrito de compras</h1>
       {lineas.some((linea) => linea.ajustada) && (
-        <Alert variant="warning">Ajustamos algunas cantidades al stock disponible.</Alert>
+        <div className="alert alert-warning">Ajustamos algunas cantidades al stock disponible.</div>
       )}
-      <Table responsive className="align-middle">
+      <div className="table-responsive">
+      <table className="table align-middle">
         <caption className="visually-hidden">Productos en tu carrito</caption>
         <thead>
           <tr>
@@ -73,7 +74,8 @@ function Carrito({ lineas, onCambiarCantidad, onQuitar, onVaciar }) {
             <td />
           </tr>
         </tfoot>
-      </Table>
+      </table>
+      </div>
       <div className="d-flex flex-wrap justify-content-between gap-2">
         <Button variant="outline-secondary" onClick={onVaciar}>Vaciar carrito</Button>
         <Link to="/checkout" className="btn btn-primary">Continuar con la compra</Link>

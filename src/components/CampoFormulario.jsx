@@ -27,7 +27,7 @@ function CampoFormulario({ id, etiqueta, valor, error = "", onChange, tipo = "te
         aria-describedby={error ? idError : undefined}
         {...resto}
       />
-      {ayuda && <Form.Text muted>{ayuda}</Form.Text>}
+      {ayuda && <div className="form-text">{ayuda}</div>}
       <Form.Control.Feedback type="invalid" id={idError}>
         {error}
       </Form.Control.Feedback>

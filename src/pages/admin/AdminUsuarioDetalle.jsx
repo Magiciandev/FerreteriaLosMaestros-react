@@ -1,39 +1,31 @@
-import { Alert, Table } from "react-bootstrap";
 import { Link, useParams } from "react-router-dom";
-import EstadoOrden from "../../components/EstadoOrden";
-import { esVenta, ordenarPorFecha } from "../../utils/estadisticas";
-import { formatearCLP, formatearFecha, formatearFechaHora } from "../../utils/formato";
+import { formatearFecha } from "../../utils/formato";
+import { etiquetaRol } from "../../utils/validaciones";
 
-// Ficha de un usuario (ruta /admin/usuarios/:id) con su historial de compras.
+// Ficha de un usuario (ruta /admin/usuarios/:id).
 // Props:
 //   usuarios  -> arreglo de usuarios; el que se muestra se busca con el :id de la URL
-//   ordenes   -> todas las órdenes; se filtran las que tienen idUsuario igual al de la ficha
-//                (una compra hecha sin iniciar sesión no queda asociada a ningún usuario)
 // La contraseña nunca se muestra. No tiene estado propio.
-function AdminUsuarioDetalle({ usuarios, ordenes }) {
+function AdminUsuarioDetalle({ usuarios }) {
   const { id } = useParams();
-  const usuario = usuarios.find((actual) => actual.id === id);
+  const usuario = usuarios.find((actual) => String(actual.id) === id);
 
   if (!usuario) {
     return (
       <section>
-        <Alert variant="warning">
-          No encontramos al usuario "{id}". <Alert.Link as={Link} to="/admin/usuarios">Volver al listado</Alert.Link>
-        </Alert>
+        <div className="alert alert-warning">
+          No encontramos al usuario "{id}". <Link to="/admin/usuarios" className="alert-link">Volver al listado</Link>
+        </div>
       </section>
     );
   }
-
-  const compras = ordenarPorFecha(ordenes.filter((orden) => orden.idUsuario === usuario.id));
-  const aprobadas = compras.filter(esVenta);
-  const gastado = aprobadas.reduce((suma, orden) => suma + orden.total, 0);
 
   // Pares etiqueta / valor; los vacíos (por ejemplo la dirección de un empleado) se omiten.
   const ficha = [
     ["Nombre", `${usuario.nombre} ${usuario.apellidos}`],
     ["Correo", usuario.correo],
     ["RUN", usuario.run],
-    ["Rol", usuario.rol],
+    ["Rol", etiquetaRol(usuario.rol)],
     ["Tipo de cliente", usuario.tipoCliente],
     ["Fecha de nacimiento", usuario.fechaNacimiento ? formatearFecha(usuario.fechaNacimiento) : ""],
     ["Región", usuario.region],
@@ -59,37 +51,6 @@ function AdminUsuarioDetalle({ usuarios, ordenes }) {
           </div>
         ))}
       </dl>
-
-      <h2 className="h5">Historial de compras</h2>
-      {compras.length === 0 ? (
-        <p className="text-secondary">Este usuario todavía no tiene compras.</p>
-      ) : (
-        <>
-          <p className="small text-secondary">
-            {aprobadas.length} {aprobadas.length === 1 ? "compra aprobada" : "compras aprobadas"} por un total de {formatearCLP(gastado)}.
-          </p>
-          <Table responsive hover size="sm" className="align-middle">
-            <thead>
-              <tr>
-                <th>N.° de orden</th>
-                <th>Fecha</th>
-                <th className="text-end">Total</th>
-                <th>Estado</th>
-              </tr>
-            </thead>
-            <tbody>
-              {compras.map((orden) => (
-                <tr key={orden.id}>
-                  <td><Link to={`/admin/ordenes/${orden.id}`}>{orden.id}</Link></td>
-                  <td>{formatearFechaHora(orden.fecha)}</td>
-                  <td className="text-end">{formatearCLP(orden.total)}</td>
-                  <td><EstadoOrden estado={orden.estado} /></td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
-        </>
-      )}
     </section>
   );
 }

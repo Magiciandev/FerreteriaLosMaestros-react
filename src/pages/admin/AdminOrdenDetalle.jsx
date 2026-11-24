@@ -1,4 +1,4 @@
-import { Alert, Button } from "react-bootstrap";
+import { Button } from "react-bootstrap";
 import { Link, useParams } from "react-router-dom";
 import EstadoOrden from "../../components/EstadoOrden";
 import ResumenOrden from "../../components/ResumenOrden";
@@ -8,18 +8,17 @@ import { formatearFechaHora } from "../../utils/formato";
 // mismo componente que muestra la boleta al cliente después de pagar.
 // Props:
 //   ordenes          -> arreglo de órdenes; la que se muestra se busca con el :id de la URL
-//   esAdministrador  -> solo el Administrador ve el enlace a la ficha del cliente
 // Al imprimir, la clase "no-imprimir" oculta los botones y el menú del panel (ver index.css).
-function AdminOrdenDetalle({ ordenes, esAdministrador = false }) {
+function AdminOrdenDetalle({ ordenes }) {
   const { id } = useParams();
   const orden = ordenes.find((actual) => actual.id === id);
 
   if (!orden) {
     return (
       <section>
-        <Alert variant="warning">
-          No encontramos la orden "{id}". <Alert.Link as={Link} to="/admin/ordenes">Volver a las órdenes</Alert.Link>
-        </Alert>
+        <div className="alert alert-warning">
+          No encontramos la orden "{id}". <Link to="/admin/ordenes" className="alert-link">Volver a las órdenes</Link>
+        </div>
       </section>
     );
   }
@@ -32,9 +31,6 @@ function AdminOrdenDetalle({ ordenes, esAdministrador = false }) {
         </h1>
         <div className="d-flex flex-wrap gap-2 no-imprimir">
           <Link to="/admin/ordenes" className="btn btn-outline-secondary">Volver a las órdenes</Link>
-          {esAdministrador && orden.idUsuario && (
-            <Link to={`/admin/usuarios/${orden.idUsuario}`} className="btn btn-outline-dark">Ver cliente</Link>
-          )}
           <Button variant="primary" onClick={() => window.print()}>Imprimir boleta</Button>
         </div>
       </div>
@@ -42,7 +38,7 @@ function AdminOrdenDetalle({ ordenes, esAdministrador = false }) {
       <p className="text-secondary">Fecha: {formatearFechaHora(orden.fecha)}</p>
 
       {orden.estado === "rechazada" && (
-        <Alert variant="danger">El pago fue rechazado: no se cobró ni se descontó stock.</Alert>
+        <div className="alert alert-danger">El pago fue rechazado: no se cobró ni se descontó stock.</div>
       )}
 
       <ResumenOrden orden={orden} />

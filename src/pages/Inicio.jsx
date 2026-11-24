@@ -2,12 +2,15 @@ import { Col, Container, Row } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import GrillaProductos from "../components/GrillaProductos";
 import TarjetaCategoria from "../components/TarjetaCategoria";
-import { estaDisponible, productosEnOferta } from "../utils/productos";
+import { estaDisponible, filtrarProductos } from "../utils/productos";
 
 // Página de inicio: portada, categorías y las ofertas con más descuento que tienen stock.
 // Props: productos, categorias y onAgregar (se pasa a las tarjetas de producto).
 function Inicio({ productos, categorias, onAgregar }) {
-  const ofertas = productosEnOferta(productos).filter(estaDisponible).slice(0, 4);
+  const ofertas = filtrarProductos(productos, { soloOfertas: true })
+    .filter(estaDisponible)
+    .sort((a, b) => b.descuento - a.descuento)
+    .slice(0, 4);
 
   return (
     <>

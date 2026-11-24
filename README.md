@@ -1,88 +1,64 @@
-# Ferretería Los Maestros (React)
+# Ferretería Los Maestros: frontend
 
-Evaluación Parcial 2 - Desarrollo FullStack II (DSY1104). Migración de la tienda de la
-Fase 1 (HTML + CSS + JS) a React + Bootstrap, con pruebas unitarias en Vitest.
+Tienda en línea de una ferretería (React + Vite). Este repositorio es solo el **frontend** (`ferreteria-front`): se conecta a dos servicios aparte, `ferreteria-auth` (inicio de sesión, registro y usuarios) y `ferreteria-back` (categorías, productos, órdenes y consultas). El detalle de cada ruta y de los datos que se intercambian está en el documento «Contrato de integración».
+
+## Tecnologías
+
+React 19, Vite, React Router 7, Bootstrap 5 con react-bootstrap, Vitest con Testing Library y ESLint.
 
 ## Cómo ejecutarlo
 
-```bash
-npm install
-npm run dev          # tienda en http://localhost:5173
-npm run build        # compila a /dist
-npm run lint         # revisión estática con oxlint
-```
+1. Instalar dependencias: `npm install`
+2. Revisar las direcciones de los servicios en `.env.development` (hay una plantilla en `.env.example`):
 
-## Pruebas (Vitest + Testing Library)
+   | Variable | Servicio | Valor por defecto |
+   |---|---|---|
+   | `VITE_AUTH_API_URL` | ferreteria-auth | `http://localhost:8082/api` |
+   | `VITE_API_URL` | ferreteria-back | `http://localhost:8083/api` |
 
-```bash
-npm test             # modo vigilancia: se re-ejecuta al guardar
-npm run test:run     # una sola ejecución (deben pasar las 20)
-npm run coverage     # pruebas + informe de cobertura en coverage/index.html
-```
+3. Levantar `ferreteria-auth` y `ferreteria-back`, y luego `npm run dev` (abre en `http://localhost:5173`).
 
-El proyecto tiene **exactamente 20 pruebas, 10 por integrante**, y no se agregan más: si algo nuevo
-necesita una prueba, reemplaza a una de estas. Cada prueba empieza con su código.
-La configuración está en el bloque `test` de `vite.config.js` y en `src/test/setup.js`.
+## Scripts
 
-| Código | Qué comprueba                                                       | Archivo                                   |
-| ------ | ------------------------------------------------------------------- | ----------------------------------------- |
-| A1     | `precioFinal` aplica el descuento                                   | `src/utils/productos.spec.js`             |
-| A2     | Agregar al carrito sube el contador y guarda en `localStorage`      | `src/App.spec.jsx`                        |
-| A3     | `TarjetaProducto` muestra los datos recibidos por props             | `src/components/TarjetaProducto.spec.jsx` |
-| A4     | Un producto en oferta muestra descuento y precio tachado            | `src/components/TarjetaProducto.spec.jsx` |
-| A5     | Con stock 0 el botón de agregar se deshabilita                      | `src/components/TarjetaProducto.spec.jsx` |
-| A6     | El clic en Agregar llama a `onAgregar`                              | `src/components/TarjetaProducto.spec.jsx` |
-| A7     | `GrillaProductos` dibuja una tarjeta por producto                   | `src/components/GrillaProductos.spec.jsx` |
-| A8     | Escribir en el buscador cambia los resultados                       | `src/pages/Productos.spec.jsx`            |
-| A9     | `crear` guarda en `localStorage` (espía)                            | `src/data/coleccion.spec.js`              |
-| A10    | `crear` con un id repetido lanza un error                           | `src/data/coleccion.spec.js`              |
-| B1     | `validarRun` acepta y rechaza según el dígito verificador           | `src/utils/validaciones.spec.js`          |
-| B2     | Productos críticos con un servicio simulado (mock asíncrono)        | `src/services/productos.spec.js`          |
-| B3     | `autenticar` con credenciales correctas e incorrectas               | `src/services/autenticacion.spec.js`      |
-| B4     | `crearSesion` nunca incluye la contraseña                           | `src/services/autenticacion.spec.js`      |
-| B5     | Con sesión, el `Header` saluda con el primer nombre                 | `src/components/Header.spec.jsx`          |
-| B6     | Cerrar sesión ejecuta la función recibida por props                 | `src/components/Header.spec.jsx`          |
-| B7     | `CampoFormulario` muestra el error solo cuando existe               | `src/components/CampoFormulario.spec.jsx` |
-| B8     | `useFormulario` muestra el error al salir del campo, no al escribir | `src/hooks/useFormulario.spec.jsx`        |
-| B9     | `Login` llama a `onIngresar` con el correo y la contraseña          | `src/pages/Login.spec.jsx`                |
-| B10    | `RutaProtegida` con un rol no permitido muestra Acceso restringido  | `src/components/RutaProtegida.spec.jsx`   |
+| Comando | Qué hace |
+|---|---|
+| `npm run dev` | Servidor de desarrollo |
+| `npm run build` | Genera la versión para publicar en `dist/` |
+| `npm run lint` | Revisa el código con ESLint |
+| `npm test` | Pruebas en modo observación |
+| `npm run coverage` | Corre todas las pruebas una vez y muestra la cobertura |
 
-## Estructura
+## Estructura de `src/`
 
-```
-src/
-  components/   piezas reutilizables (Header, TarjetaProducto, CampoFormulario, ...)
-  layouts/      estructuras con <Outlet />: Layout (tienda) y AdminLayout (panel)
-  pages/        una vista por ruta
-  data/         base de datos simulada
-    baseDeDatos.js   colecciones y diccionario de datos
-    coleccion.js     fábrica de CRUD (listar, obtener, crear, actualizar, eliminar)
-    *.json           datos iniciales; regiones.js: regiones y comunas
-  hooks/        useColeccion: conecta una colección con el estado de React
-  services/     lógica que recibe el servicio como parámetro (se prueba con mocks)
-  utils/        funciones puras: formato, localStorage, validaciones, productos, carrito
-  test/         configuración y datos de apoyo para las pruebas
-  App.jsx       estado global (sesión, carrito, colecciones) y tabla de rutas
-```
+| Carpeta | Contenido |
+|---|---|
+| `components/` | Piezas reutilizables que reciben todo por props |
+| `pages/` | Una página por ruta; `pages/admin/` es el panel de administración |
+| `services/` | Comunicación con los servicios: `http.js` (función base con el token), `authService`, `productoService`, `categoriaService`, `ordenService`, `consultaService` y `usuarioService`; además `compras.js` y `productos.js` con reglas que reciben un servicio |
+| `utils/` | Funciones puras: carrito, filtros, validaciones, estadísticas, formato |
+| `data/` | Datos que se quedan en el front: blog y regiones de Chile |
+| `test/` | Configuración de las pruebas, datos de prueba y el servidor simulado (`apiFalsa.js`) |
+| `App.jsx` | Estado general y mapa de rutas |
 
-## Base de datos simulada
+En la raíz, `datos-iniciales/` tiene las categorías y los productos con los que se carga la base de datos de `ferreteria-back`.
 
-Cada colección (productos, categorías, usuarios, órdenes, blog, consultas) se guarda en
-`localStorage` y expone las operaciones CRUD. La primera vez se copia el `.json` inicial.
-Para volver a los datos de fábrica, desde la consola del navegador: `localStorage.clear()`
-y recargar.
+## Sesión y roles
 
-## Estado de las fases
+El inicio de sesión se hace contra `ferreteria-auth`, que entrega un token JWT con el rol del usuario. El front guarda el token y el usuario en `sessionStorage` (se borran al cerrar la pestaña) y lo envía en la cabecera `Authorization: Bearer ...`. El panel de administración (`/admin`) solo se muestra al rol `ADMIN`; sin sesión o con otro rol aparece «Acceso restringido». Los permisos reales los vuelve a revisar el servidor en cada petición. Si el token vence, la sesión se cierra sola.
 
-- [x] Fase 1: esqueleto, rutas y navbar responsive
-- [x] Fase 2: base de datos simulada con CRUD, validaciones y helpers
-- [x] Fase 3: tienda pública (inicio, productos con filtros, detalle, categorías, ofertas, nosotros, blog, contacto) y entorno de pruebas con Vitest
-- [x] Fase 4: cuenta y sesión (login, registro, perfil y rutas protegidas por rol)
-- [x] Fase 5: compra (carrito, checkout, pago aprobado y rechazado simulado, boleta)
-- [ ] Fase 6: administración
-- [ ] Cierre: cobertura analizada, ERS V2, documento de cobertura y entrega
+## Pruebas y cobertura
 
-## Convención de commits (un integrante por funcionalidad)
+`npm run coverage` mide **todo el código de `src/`** y exige 100% en sentencias, ramas, funciones y líneas. Hay 113 pruebas:
 
-`feat:` funcionalidad nueva - `test:` pruebas - `fix:` corrección - `docs:` documentación
-Ejemplo: `feat(tienda): catálogo con búsqueda y filtros`
+- **A1 a A10 y B1 a B10** (20 pruebas, diez por integrante): comportamiento del catálogo, el carrito y la compra.
+- **C1 a C93**: cobertura de validaciones, estadísticas, servicios, todas las páginas, los flujos de compra y registro, el panel de administración y los errores del servidor.
+
+Las pruebas de páginas no necesitan los servicios reales: usan un servidor simulado en memoria (`src/test/apiFalsa.js`) que responde como lo establece el contrato (rutas, permisos por rol y mensajes de error). Si se agrega código en `src/`, hay que agregar su prueba para mantener el 100%.
+
+## Contrato con el backend
+
+Resumen de lo que el front espera (todas las rutas bajo `/api`):
+
+- **Auth:** `POST /auth/login` devuelve `{ token, correo, rol }`; `POST /auth/registro` crea un cliente; `GET/POST/PUT/DELETE /usuarios` (solo ADMIN).
+- **Tienda:** `GET /categorias` y `GET /productos` son públicos; crear, cambiar y eliminar son de ADMIN. `POST /ordenes` es público (el servidor calcula precios y descuenta stock) y `GET /ordenes` es de ADMIN. `POST /consultas` es público.
+- **Errores:** el servidor responde `{ "error": "mensaje" }` y el front muestra ese texto.

@@ -22,22 +22,26 @@ function FiltrosProductos({ categorias, texto, categoria, soloOfertas, onCambiar
         <Col xs={12} sm={6} md={3}>
           <Form.Group controlId="filtro-categoria">
             <Form.Label>Categoría</Form.Label>
-            <Form.Select value={categoria} onChange={(evento) => onCambiar("categoria", evento.target.value)}>
+            <select id="filtro-categoria" className="form-select" value={categoria} onChange={(evento) => onCambiar("categoria", evento.target.value)}>
               <option value="">Todas</option>
               {categorias.map((item) => (
                 <option key={item.slug} value={item.slug}>{item.label}</option>
               ))}
-            </Form.Select>
+            </select>
           </Form.Group>
         </Col>
         <Col xs={12} sm={6} md={2}>
-          <Form.Check
-            type="switch"
-            id="filtro-ofertas"
-            label="Solo ofertas"
-            checked={soloOfertas}
-            onChange={(evento) => onCambiar("soloOfertas", evento.target.checked)}
-          />
+          <div className="form-check form-switch">
+            <input
+              className="form-check-input"
+              type="checkbox"
+              role="switch"
+              id="filtro-ofertas"
+              checked={soloOfertas}
+              onChange={(evento) => onCambiar("soloOfertas", evento.target.checked)}
+            />
+            <label className="form-check-label" htmlFor="filtro-ofertas">Solo ofertas</label>
+          </div>
         </Col>
         <Col xs={12} md={2} className="d-grid">
           <Button variant="outline-secondary" onClick={onLimpiar}>Limpiar filtros</Button>

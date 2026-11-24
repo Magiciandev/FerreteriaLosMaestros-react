@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Col, Form, Row, Table } from "react-bootstrap";
+import { Col, Form, Row } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import EstadoOrden from "../../components/EstadoOrden";
 import { etiquetaEntrega } from "../../services/compras";
@@ -42,61 +42,63 @@ function AdminOrdenes({ ordenes }) {
         <Col xs={12} md={5}>
           <Form.Group controlId="admin-ordenes-estado">
             <Form.Label>Estado</Form.Label>
-            <Form.Select value={estado} onChange={(evento) => setEstado(evento.target.value)}>
+            <select id="admin-ordenes-estado" className="form-select" value={estado} onChange={(evento) => setEstado(evento.target.value)}>
               <option value="">Todos</option>
               <option value="pagada">Pagada</option>
               <option value="rechazada">Rechazada</option>
-            </Form.Select>
+            </select>
           </Form.Group>
         </Col>
       </Row>
 
       <p className="small text-secondary" role="status">{visibles.length} de {ordenes.length} órdenes</p>
 
-      <Table responsive hover className="align-middle">
-        <thead>
-          <tr>
-            <th>N.° de orden</th>
-            <th>Fecha</th>
-            <th>Cliente</th>
-            <th>Entrega</th>
-            <th className="text-end">Total</th>
-            <th>Estado</th>
-            <th><span className="visually-hidden">Acciones</span></th>
-          </tr>
-        </thead>
-        <tbody>
-          {visibles.length === 0 && (
+      <div className="table-responsive">
+        <table className="table table-hover align-middle">
+          <thead>
             <tr>
-              <td colSpan={7} className="text-center text-secondary py-4">
-                {ordenes.length === 0 ? "Todavía no hay compras registradas." : "Ninguna orden coincide con la búsqueda."}
-              </td>
+              <th>N.° de orden</th>
+              <th>Fecha</th>
+              <th>Cliente</th>
+              <th>Entrega</th>
+              <th className="text-end">Total</th>
+              <th>Estado</th>
+              <th><span className="visually-hidden">Acciones</span></th>
             </tr>
-          )}
-          {visibles.map((orden) => (
-            <tr key={orden.id}>
-              <td><code>{orden.id}</code></td>
-              <td className="text-nowrap">{formatearFechaHora(orden.fecha)}</td>
-              <td>
-                {orden.cliente.nombre} {orden.cliente.apellidos}
-                <div className="small text-secondary">{orden.cliente.correo}</div>
-              </td>
-              <td>{etiquetaEntrega(orden.entrega.tipo)}</td>
-              <td className="text-end text-nowrap">{formatearCLP(orden.total)}</td>
-              <td><EstadoOrden estado={orden.estado} /></td>
-              <td className="text-end text-nowrap">
-                <Link
-                  to={`/admin/ordenes/${orden.id}`}
-                  className="btn btn-sm btn-outline-dark"
-                  aria-label={`Ver boleta de la orden ${orden.id}`}
-                >
-                  Ver boleta
-                </Link>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </Table>
+          </thead>
+          <tbody>
+            {visibles.length === 0 && (
+              <tr>
+                <td colSpan={7} className="text-center text-secondary py-4">
+                  {ordenes.length === 0 ? "Todavía no hay compras registradas." : "Ninguna orden coincide con la búsqueda."}
+                </td>
+              </tr>
+            )}
+            {visibles.map((orden) => (
+              <tr key={orden.id}>
+                <td><code>{orden.id}</code></td>
+                <td className="text-nowrap">{formatearFechaHora(orden.fecha)}</td>
+                <td>
+                  {orden.cliente.nombre} {orden.cliente.apellidos}
+                  <div className="small text-secondary">{orden.cliente.correo}</div>
+                </td>
+                <td>{etiquetaEntrega(orden.entrega.tipo)}</td>
+                <td className="text-end text-nowrap">{formatearCLP(orden.total)}</td>
+                <td><EstadoOrden estado={orden.estado} /></td>
+                <td className="text-end text-nowrap">
+                  <Link
+                    to={`/admin/ordenes/${orden.id}`}
+                    className="btn btn-sm btn-outline-dark"
+                    aria-label={`Ver boleta de la orden ${orden.id}`}
+                  >
+                    Ver boleta
+                  </Link>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </section>
   );
 }

@@ -8,25 +8,18 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: './src/test/setup.js',
     css: false,
+    // Direcciones de los servicios durante las pruebas (las pruebas usan un servidor simulado).
+    env: {
+      VITE_AUTH_API_URL: 'http://auth.test/api',
+      VITE_API_URL: 'http://api.test/api'
+    },
+    // Las pruebas de la aplicación completa dibujan muchas páginas: se deja más margen que los 5 s
+    // por defecto para que no fallen en equipos lentos.
+    testTimeout: 30000,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
-      include: [
-        'src/utils/productos.js',
-        'src/utils/validaciones.js',
-        'src/services/productos.js',
-        'src/services/autenticacion.js',
-        'src/data/coleccion.js',
-        'src/hooks/useFormulario.js',
-        'src/components/TarjetaProducto.jsx',
-        'src/components/GrillaProductos.jsx',
-        'src/components/Header.jsx',
-        'src/components/CampoFormulario.jsx',
-        'src/components/RutaProtegida.jsx',
-        'src/pages/Login.jsx',
-        'src/pages/Productos.jsx',
-        'src/App.jsx'
-      ],
+      include: ['src/**/*.{js,jsx}'],
       exclude: [
         'node_modules/',
         'src/test/'

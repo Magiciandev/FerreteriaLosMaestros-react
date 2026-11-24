@@ -17,9 +17,10 @@ function CampoRegionComuna({ region, comuna, errorRegion = "", errorComuna = "",
       <Col xs={12} md={6}>
         <Form.Group controlId={`${prefijo}-region`}>
           <Form.Label>Región</Form.Label>
-          <Form.Select
+          <select
+            id={`${prefijo}-region`}
+            className={`form-select${errorRegion ? " is-invalid" : ""}`}
             value={region}
-            isInvalid={Boolean(errorRegion)}
             aria-describedby={errorRegion ? `${prefijo}-region-error` : undefined}
             onChange={(evento) => onCambiar({ region: evento.target.value, comuna: "" })}
           >
@@ -27,17 +28,18 @@ function CampoRegionComuna({ region, comuna, errorRegion = "", errorComuna = "",
             {REGIONES_CHILE.map((item) => (
               <option key={item.region} value={item.region}>{item.region}</option>
             ))}
-          </Form.Select>
+          </select>
           <Form.Control.Feedback type="invalid" id={`${prefijo}-region-error`}>{errorRegion}</Form.Control.Feedback>
         </Form.Group>
       </Col>
       <Col xs={12} md={6}>
         <Form.Group controlId={`${prefijo}-comuna`}>
           <Form.Label>Comuna</Form.Label>
-          <Form.Select
+          <select
+            id={`${prefijo}-comuna`}
+            className={`form-select${errorComuna ? " is-invalid" : ""}`}
             value={comuna}
             disabled={!region}
-            isInvalid={Boolean(errorComuna)}
             aria-describedby={errorComuna ? `${prefijo}-comuna-error` : undefined}
             onChange={(evento) => onCambiar({ comuna: evento.target.value })}
           >
@@ -45,7 +47,7 @@ function CampoRegionComuna({ region, comuna, errorRegion = "", errorComuna = "",
             {comunas.map((nombre) => (
               <option key={nombre} value={nombre}>{nombre}</option>
             ))}
-          </Form.Select>
+          </select>
           <Form.Control.Feedback type="invalid" id={`${prefijo}-comuna-error`}>{errorComuna}</Form.Control.Feedback>
         </Form.Group>
       </Col>

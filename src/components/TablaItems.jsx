@@ -1,4 +1,3 @@
-import { Table } from "react-bootstrap";
 import { formatearCLP } from "../utils/formato";
 
 // Tabla de solo lectura con los productos de una compra.
@@ -6,7 +5,8 @@ import { formatearCLP } from "../utils/formato";
 // quiere mostrar la fila final, total. Se usa en el checkout y en el resumen de la orden.
 function TablaItems({ items, total }) {
   return (
-    <Table responsive size="sm" className="align-middle">
+    <div className="table-responsive">
+    <table className="table table-sm align-middle">
       <caption className="visually-hidden">Productos de la compra</caption>
       <thead>
         <tr>
@@ -34,7 +34,8 @@ function TablaItems({ items, total }) {
           </tr>
         </tfoot>
       )}
-    </Table>
+    </table>
+    </div>
   );
 }
 

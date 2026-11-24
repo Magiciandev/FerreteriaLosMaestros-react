@@ -1,8 +1,7 @@
-import { rutaImagen } from "../utils/productos";
 
 // Foto del producto en un recuadro 4:3. Si el producto no tiene foto, muestra un marcador de texto.
 function ImagenProducto({ producto, className = "" }) {
-  const ruta = rutaImagen(producto);
+  const ruta = producto.imagen ? `/${producto.imagen.replace(/^\//, "")}` : null;
   return (
     <div className={`imagen-producto ratio ratio-4x3 ${className}`}>
       {ruta ? (

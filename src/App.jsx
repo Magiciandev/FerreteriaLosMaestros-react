@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
-import { Route, Routes } from "react-router-dom";
-import RutaProtegida from "./components/RutaProtegida";
-import { blogDB, categoriasDB, consultasDB, ordenesDB, productosDB, usuariosDB } from "./data/baseDeDatos";
-import { useColeccion } from "./hooks/useColeccion";
-import AdminLayout from "./layouts/AdminLayout";
-import Layout from "./layouts/Layout";
+import { Alert, Toast, ToastContainer } from "react-bootstrap";
+import { Link, Route, Routes } from "react-router-dom";
+import Cargando from "./components/Cargando";
+import Footer from "./components/Footer";
+import Header from "./components/Header";
+import PanelAdmin from "./components/PanelAdmin";
+import blogSemilla from "./data/blog.json";
+import AccesoRestringido from "./pages/AccesoRestringido";
 import AdminCategoriaForm from "./pages/admin/AdminCategoriaForm";
 import AdminCategorias from "./pages/admin/AdminCategorias";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -31,234 +33,261 @@ import Login from "./pages/Login";
 import NoEncontrada from "./pages/NoEncontrada";
 import Nosotros from "./pages/Nosotros";
 import Ofertas from "./pages/Ofertas";
-import PagoError from "./pages/PagoError";
-import PagoExitoso from "./pages/PagoExitoso";
-import Perfil from "./pages/Perfil";
 import Productos from "./pages/Productos";
 import Registro from "./pages/Registro";
-import { autenticar, crearSesion, encontrarDuplicado } from "./services/autenticacion";
-import { construirOrden } from "./services/compras";
-import { borrarClave, guardarJSON, leerJSON } from "./utils/almacenamiento";
+import * as authService from "./services/authService";
+import * as categoriaService from "./services/categoriaService";
+import { armarSolicitudOrden } from "./services/compras";
+import * as consultaService from "./services/consultaService";
+import * as ordenService from "./services/ordenService";
+import * as productoService from "./services/productoService";
+import * as usuarioService from "./services/usuarioService";
+import { guardarJSON, leerJSON } from "./utils/almacenamiento";
 import { agregarItem, cambiarCantidad, contarItems, detallarCarrito, quitarItem } from "./utils/carrito";
 
-
 function App() {
-  // Estado global de la aplicación. Vive en App y baja a las páginas por props.
-  // Se inicializa desde localStorage para que sobreviva a recargar la página.
-  const [sesion, setSesion] = useState(() => leerJSON("sesionActual", null));
-  // carrito: arreglo de { idProducto, cantidad }.
+  // Estado de la aplicación. Vive en App y baja a las páginas por props.
+  // Catálogo (productos y categorías): se pide al servidor una vez, al abrir la tienda.
+  const [productos, setProductos] = useState([]);
+  const [categorias, setCategorias] = useState([]);
+  const [cargando, setCargando] = useState(true);
+  const [errorCarga, setErrorCarga] = useState("");
+  // Sesión: { correo, rol } o null. Viene de sessionStorage (la guarda authService al ingresar).
+  const [sesion, setSesion] = useState(authService.obtenerSesion);
+  // Datos del panel (órdenes y usuarios): solo se piden cuando hay un administrador con sesión.
+  const [ordenes, setOrdenes] = useState([]);
+  const [usuarios, setUsuarios] = useState([]);
+  const [panelCargado, setPanelCargado] = useState(false);
+  const [errorPanel, setErrorPanel] = useState("");
+  // carrito: arreglo de { idProducto, cantidad }. Se guarda en el navegador, no en el servidor.
   const [carrito, setCarrito] = useState(() => leerJSON("carrito", []));
-  // Aviso que se muestra al agregar un producto al carrito.
-  const [aviso, setAviso] = useState({ mensaje: "", visible: false });
+  // Aviso (Toast) que aparece al agregar un producto al carrito y se desvanece solo. "texto" se
+  // conserva mientras se desvanece; "id" cambia cuando se agrega otro producto con el aviso aún
+  // visible, para que el Toast se vuelva a crear y su temporizador parta de cero.
+  const [aviso, setAviso] = useState({ id: 0, texto: "", visible: false });
 
-  // Colecciones de la base de datos simulada, conectadas al estado de React.
-  // Las demás (usuarios, órdenes) se conectan aquí cuando las vistas las necesiten.
-  const productos = useColeccion(productosDB);
-  const categorias = useColeccion(categoriasDB);
-  const blog = useColeccion(blogDB);
-  const usuarios = useColeccion(usuariosDB);
-  const ordenes = useColeccion(ordenesDB);
+  const esAdmin = sesion?.rol === "ADMIN";
 
-  // Cada vez que cambia la sesión o el carrito, se guardan (o se borran) en localStorage.
-  useEffect(() => {
-    if (sesion) guardarJSON("sesionActual", sesion);
-    else borrarClave("sesionActual");
-  }, [sesion]);
+  useEffect(() => guardarJSON("carrito", carrito), [carrito]);
 
   useEffect(() => {
-    guardarJSON("carrito", carrito);
-  }, [carrito]);
+    async function cargarCatalogo() {
+      try {
+        const [listaProductos, listaCategorias] = await Promise.all([
+          productoService.listarProductos(),
+          categoriaService.listarCategorias(),
+        ]);
+        setProductos(listaProductos);
+        setCategorias(listaCategorias);
+      } catch (error) {
+        setErrorCarga(error.message);
+      } finally {
+        setCargando(false);
+      }
+    }
+    cargarCatalogo();
+  }, []);
 
-  // Agrega un producto al carrito (sin superar su stock) y avisa al usuario.
-  function agregarAlCarrito(producto, cantidad = 1) {
-    setCarrito((actual) => agregarItem(actual, producto.id, cantidad, producto.stock));
-    setAviso({ mensaje: `${producto.nombre} se agregó al carrito.`, visible: true });
+  useEffect(() => {
+    if (!esAdmin) return;
+    async function cargarPanel() {
+      try {
+        const [listaOrdenes, listaUsuarios] = await Promise.all([ordenService.listarOrdenes(), usuarioService.listarUsuarios()]);
+        setOrdenes(listaOrdenes);
+        setUsuarios(listaUsuarios);
+      } catch (error) {
+        setErrorPanel(error.message);
+      } finally {
+        setPanelCargado(true);
+      }
+    }
+    cargarPanel();
+  }, [esAdmin]);
+
+  // ---- Sesión ----
+
+  // Pide el inicio de sesión al servicio de autenticación y deja la sesión en el estado. Si las
+  // credenciales son incorrectas, falla con el mensaje del servidor (lo muestra el Login).
+  async function ingresar(correo, password) {
+    const usuario = await authService.login(correo, password);
+    setSesion(usuario);
+    return usuario;
   }
+
+  function salir() {
+    authService.cerrarSesion();
+    setSesion(null);
+    setOrdenes([]);
+    setUsuarios([]);
+    setPanelCargado(false);
+    setErrorPanel("");
+  }
+
+  // Las páginas del panel se dibujan dentro de PanelAdmin (menú lateral + contenido), y solo si
+  // hay una sesión de administrador; si no, se muestra el aviso de acceso restringido.
+  function panel(pagina) {
+    if (!esAdmin) return <AccesoRestringido />;
+    if (!panelCargado) return <Cargando />;
+    return (
+      <PanelAdmin>
+        {errorPanel && <Alert variant="danger">{errorPanel}</Alert>}
+        {pagina}
+      </PanelAdmin>
+    );
+  }
+
+  // ---- Carrito ----
 
   // El carrito guarda solo { idProducto, cantidad }; para mostrarlo se reconstruye contra el
   // catálogo actual (precios con oferta, stock al día).
-  const lineasCarrito = detallarCarrito(carrito, productos.items);
+  const lineasCarrito = detallarCarrito(carrito, productos);
 
-  // Solo el Administrador crea, edita y elimina en el panel; el Vendedor únicamente consulta.
-  const esAdministrador = sesion?.rol === "Administrador";
+  function agregarAlCarrito(producto, cantidad = 1) {
+    setCarrito((actual) => agregarItem(actual, producto.id, cantidad, producto.stock));
+    setAviso((actual) => ({ id: actual.visible ? actual.id + 1 : actual.id, texto: `${producto.nombre} se agregó al carrito.`, visible: true }));
+  }
 
   function cambiarCantidadCarrito(idProducto, cantidad) {
-    const producto = productos.items.find((item) => item.id === idProducto);
-    setCarrito((actual) => cambiarCantidad(actual, idProducto, cantidad, producto?.stock ?? 0));
+    const producto = productos.find((item) => item.id === idProducto);
+    setCarrito((actual) => cambiarCantidad(actual, idProducto, cantidad, producto.stock));
   }
 
   function quitarDelCarrito(idProducto) {
     setCarrito((actual) => quitarItem(actual, idProducto));
   }
 
-  // Registra el intento de compra como una orden. Si el pago fue aprobado, descuenta el stock de
-  // cada producto y vacía el carrito; si fue rechazado, deja todo como estaba (el carrito se
-  // conserva para reintentar). Devuelve la orden guardada.
-  function confirmarCompra(datos, aprobado) {
-    const orden = ordenes.crear(construirOrden({ datos, lineas: lineasCarrito, aprobado, idUsuario: sesion?.id ?? null }));
-    if (aprobado) {
-      for (const linea of lineasCarrito) {
-        productos.actualizar(linea.idProducto, { stock: linea.stock - linea.cantidad });
-      }
+  // Registra el intento de compra en el servidor, que calcula los precios, revisa el stock y, si el
+  // pago fue aprobado, lo descuenta. Si el pago se aprobó se vacía el carrito y se vuelve a pedir
+  // el catálogo (el stock cambió); si fue rechazado el carrito se conserva para reintentar. Si el
+  // servidor rechaza la compra (por ejemplo, sin stock) este método falla con su mensaje.
+  async function confirmarCompra(datos, aprobado) {
+    const orden = await ordenService.crearOrden(armarSolicitudOrden({ datos, lineas: lineasCarrito, aprobado }));
+    if (orden.estado === "pagada") {
       setCarrito([]);
+      setProductos(await productoService.listarProductos());
     }
     return orden;
   }
 
-  // Inicia sesión si el correo y la contraseña coinciden con un usuario. Devuelve true o false.
-  function iniciarSesion(correo, password) {
-    const usuario = autenticar(usuarios.items, correo, password);
-    if (!usuario) return false;
-    setSesion(crearSesion(usuario));
-    return true;
+  // ---- Productos (el id es el código que escribe el administrador) ----
+
+  async function crearProducto(producto) {
+    const creado = await productoService.crearProducto(producto);
+    setProductos((actual) => [...actual, creado]);
   }
 
-  // Crea una cuenta de cliente y deja la sesión iniciada. Si el correo o el RUN ya existen,
-  // devuelve el error para que el formulario lo muestre junto al campo.
-  function registrarCliente(datos) {
-    const duplicado = encontrarDuplicado(usuarios.items, datos);
-    if (duplicado) return { ok: false, ...duplicado };
-    const nuevo = usuarios.crear({
-      ...datos,
-      correo: datos.correo.trim().toLowerCase(),
-      run: datos.run.trim().toUpperCase(),
-      tipo: "cliente",
-      rol: "Cliente",
-    });
-    setSesion(crearSesion(nuevo));
-    return { ok: true };
+  // El servidor reemplaza todos los campos, así que se envía el producto completo (el actual con los cambios).
+  async function actualizarProducto(id, cambios) {
+    const actual = productos.find((item) => item.id === id);
+    const actualizado = await productoService.actualizarProducto(id, { ...actual, ...cambios });
+    setProductos((lista) => lista.map((item) => (item.id === id ? actualizado : item)));
   }
 
-  // Guarda los cambios del perfil y mantiene la sesión al día con el nombre nuevo.
-  function actualizarPerfil(cambios) {
-    usuarios.actualizar(sesion.id, cambios);
-    setSesion((actual) => ({ ...actual, nombre: cambios.nombre, apellidos: cambios.apellidos }));
+  async function eliminarProducto(id) {
+    await productoService.eliminarProducto(id);
+    setProductos((lista) => lista.filter((item) => item.id !== id));
   }
 
-  // Edición de un usuario desde el panel. Si el Administrador edita su propia cuenta, la sesión
-  // se actualiza con los datos nuevos para que el menú no muestre el nombre anterior.
-  function actualizarUsuario(id, cambios) {
-    usuarios.actualizar(id, cambios);
-    if (sesion?.id === id) {
-      setSesion((actual) => ({ ...actual, nombre: cambios.nombre, apellidos: cambios.apellidos, correo: cambios.correo }));
-    }
+  // ---- Categorías (el id es el slug) ----
+
+  async function crearCategoria(categoria) {
+    const creada = await categoriaService.crearCategoria(categoria);
+    setCategorias((actual) => [...actual, creada]);
   }
 
-  // Guarda el mensaje del formulario de contacto en la base de datos simulada.
-  function enviarConsulta(datos) {
-    consultasDB.crear({ ...datos, fecha: new Date().toISOString() });
+  async function actualizarCategoria(slug, cambios) {
+    const actualizada = await categoriaService.actualizarCategoria(slug, { slug, ...cambios });
+    setCategorias((lista) => lista.map((item) => (item.slug === slug ? actualizada : item)));
+  }
+
+  async function eliminarCategoria(slug) {
+    await categoriaService.eliminarCategoria(slug);
+    setCategorias((lista) => lista.filter((item) => item.slug !== slug));
+  }
+
+  // ---- Usuarios (viven en el servicio de autenticación; el servidor asigna el id) ----
+
+  async function crearUsuario(usuario) {
+    const creado = await usuarioService.crearUsuario(usuario);
+    setUsuarios((actual) => [...actual, creado]);
+  }
+
+  async function actualizarUsuario(id, cambios) {
+    const actualizado = await usuarioService.actualizarUsuario(id, cambios);
+    setUsuarios((lista) => lista.map((item) => (item.id === id ? actualizado : item)));
+  }
+
+  async function eliminarUsuario(id) {
+    await usuarioService.eliminarUsuario(id);
+    setUsuarios((lista) => lista.filter((item) => item.id !== id));
+  }
+
+  // Guarda el mensaje del formulario de contacto.
+  async function enviarConsulta(datos) {
+    await consultaService.crearConsulta(datos);
   }
 
   return (
-    <Routes>
-      <Route
-        element={
-          <Layout
-            categorias={categorias.items}
-            cantidadCarrito={contarItems(carrito)}
-            sesion={sesion}
-            onCerrarSesion={() => setSesion(null)}
-            aviso={aviso}
-            onCerrarAviso={() => setAviso((actual) => ({ ...actual, visible: false }))}
-          />
-        }
-      >
-        <Route path="/" element={<Inicio productos={productos.items} categorias={categorias.items} onAgregar={agregarAlCarrito} />} />
-        <Route path="/productos" element={<Productos productos={productos.items} categorias={categorias.items} onAgregar={agregarAlCarrito} />} />
-        <Route path="/productos/:id" element={<DetalleProducto productos={productos.items} categorias={categorias.items} onAgregar={agregarAlCarrito} />} />
-        <Route path="/categorias" element={<Categorias categorias={categorias.items} productos={productos.items} />} />
-        <Route path="/categorias/:slug" element={<Categoria categorias={categorias.items} productos={productos.items} onAgregar={agregarAlCarrito} />} />
-        <Route path="/ofertas" element={<Ofertas productos={productos.items} onAgregar={agregarAlCarrito} />} />
-        <Route path="/nosotros" element={<Nosotros categorias={categorias.items} />} />
-        <Route path="/blog" element={<Blog entradas={blog.items} />} />
-        <Route path="/blog/:id" element={<DetalleBlog entradas={blog.items} />} />
-        <Route path="/contacto" element={<Contacto onEnviar={enviarConsulta} />} />
-        <Route path="/login" element={<Login sesion={sesion} onIngresar={iniciarSesion} />} />
-        <Route path="/registro" element={<Registro sesion={sesion} onRegistrar={registrarCliente} />} />
-        <Route element={<RutaProtegida sesion={sesion} />}>
-          <Route
-            path="/perfil"
-            element={<Perfil usuario={usuarios.items.find((usuario) => usuario.id === sesion?.id)} onGuardar={actualizarPerfil} />}
-          />
-        </Route>
-        <Route
-          path="/carrito"
-          element={<Carrito lineas={lineasCarrito} onCambiarCantidad={cambiarCantidadCarrito} onQuitar={quitarDelCarrito} onVaciar={() => setCarrito([])} />}
-        />
-        <Route
-          path="/checkout"
-          element={<Checkout lineas={lineasCarrito} usuario={usuarios.items.find((usuario) => usuario.id === sesion?.id)} onConfirmar={confirmarCompra} />}
-        />
-        <Route path="/pago/exitoso" element={<PagoExitoso ordenes={ordenes.items} />} />
-        <Route path="/pago/error" element={<PagoError ordenes={ordenes.items} />} />
-        <Route path="*" element={<NoEncontrada />} />
-      </Route>
+    <div className="d-flex flex-column min-vh-100">
+      <a className="salto-contenido" href="#contenido-principal">Ir al contenido</a>
+      <Header categorias={categorias} cantidadCarrito={contarItems(carrito)} sesion={sesion} onCerrarSesion={salir} />
+      <ToastContainer position="top-end" className="position-fixed p-3">
+        <Toast key={aviso.id} show={aviso.visible} onClose={() => setAviso({ ...aviso, visible: false })} delay={3500} autohide>
+          <Toast.Header closeLabel="Cerrar aviso">
+            <strong className="me-auto">Carrito</strong>
+          </Toast.Header>
+          <Toast.Body>
+            {aviso.texto} <Link to="/carrito">Ver carrito</Link>
+          </Toast.Body>
+        </Toast>
+      </ToastContainer>
+      <main id="contenido-principal" className="flex-grow-1">
+        {cargando && <Cargando />}
+        {errorCarga && <Alert variant="danger" className="m-3">{errorCarga}</Alert>}
+        {!cargando && !errorCarga && (
+          <Routes>
+            <Route path="/" element={<Inicio productos={productos} categorias={categorias} onAgregar={agregarAlCarrito} />} />
+            <Route path="/productos" element={<Productos productos={productos} categorias={categorias} onAgregar={agregarAlCarrito} />} />
+            <Route path="/productos/:id" element={<DetalleProducto productos={productos} categorias={categorias} onAgregar={agregarAlCarrito} />} />
+            <Route path="/categorias" element={<Categorias categorias={categorias} productos={productos} />} />
+            <Route path="/categorias/:slug" element={<Categoria categorias={categorias} productos={productos} onAgregar={agregarAlCarrito} />} />
+            <Route path="/ofertas" element={<Ofertas productos={productos} onAgregar={agregarAlCarrito} />} />
+            <Route path="/nosotros" element={<Nosotros categorias={categorias} />} />
+            <Route path="/blog" element={<Blog entradas={blogSemilla} />} />
+            <Route path="/blog/:id" element={<DetalleBlog entradas={blogSemilla} />} />
+            <Route path="/contacto" element={<Contacto onEnviar={enviarConsulta} />} />
+            <Route path="/login" element={<Login onIngresar={ingresar} />} />
+            <Route path="/registro" element={<Registro onRegistrar={authService.registrarCliente} />} />
+            <Route
+              path="/carrito"
+              element={<Carrito lineas={lineasCarrito} onCambiarCantidad={cambiarCantidadCarrito} onQuitar={quitarDelCarrito} onVaciar={() => setCarrito([])} />}
+            />
+            <Route path="/checkout" element={<Checkout lineas={lineasCarrito} onConfirmar={confirmarCompra} />} />
 
-      {/* Panel: solo Administrador y Vendedor. El Vendedor ve productos y órdenes (listado y
-          detalle); el resto es solo del Administrador (RF-09). */}
-      <Route path="/admin" element={<RutaProtegida sesion={sesion} roles={["Administrador", "Vendedor"]} />}>
-        <Route element={<AdminLayout sesion={sesion} />}>
-          <Route
-            index
-            element={<AdminDashboard productos={productos.items} ordenes={ordenes.items} usuarios={usuarios.items} esAdministrador={esAdministrador} />}
-          />
-          <Route path="ordenes" element={<AdminOrdenes ordenes={ordenes.items} />} />
-          <Route path="ordenes/:id" element={<AdminOrdenDetalle ordenes={ordenes.items} esAdministrador={esAdministrador} />} />
-          <Route
-            path="productos"
-            element={<AdminProductos productos={productos.items} categorias={categorias.items} esAdministrador={esAdministrador} onEliminar={productos.eliminar} />}
-          />
-          <Route
-            path="productos/:id"
-            element={<AdminProductoDetalle productos={productos.items} categorias={categorias.items} esAdministrador={esAdministrador} />}
-          />
-          {/* Mismo componente que el perfil de la tienda: para el personal muestra sus datos
-              (se administran desde Usuarios). */}
-          <Route
-            path="perfil"
-            element={<Perfil usuario={usuarios.items.find((usuario) => usuario.id === sesion?.id)} onGuardar={actualizarPerfil} />}
-          />
+            {/* Panel de administración: solo con una sesión de administrador (rol ADMIN). */}
+            <Route path="/admin" element={panel(<AdminDashboard productos={productos} ordenes={ordenes} usuarios={usuarios} />)} />
+            <Route path="/admin/ordenes" element={panel(<AdminOrdenes ordenes={ordenes} />)} />
+            <Route path="/admin/ordenes/:id" element={panel(<AdminOrdenDetalle ordenes={ordenes} />)} />
+            <Route path="/admin/productos" element={panel(<AdminProductos productos={productos} categorias={categorias} onEliminar={eliminarProducto} />)} />
+            <Route path="/admin/productos/nuevo" element={panel(<AdminProductoForm productos={productos} categorias={categorias} onCrear={crearProducto} onActualizar={actualizarProducto} />)} />
+            <Route path="/admin/productos/criticos" element={panel(<AdminProductosCriticos productos={productos} categorias={categorias} />)} />
+            <Route path="/admin/productos/:id" element={panel(<AdminProductoDetalle productos={productos} categorias={categorias} />)} />
+            <Route path="/admin/productos/:id/editar" element={panel(<AdminProductoForm productos={productos} categorias={categorias} onCrear={crearProducto} onActualizar={actualizarProducto} />)} />
+            <Route path="/admin/categorias" element={panel(<AdminCategorias categorias={categorias} productos={productos} onEliminar={eliminarCategoria} />)} />
+            <Route path="/admin/categorias/nueva" element={panel(<AdminCategoriaForm categorias={categorias} onCrear={crearCategoria} onActualizar={actualizarCategoria} />)} />
+            <Route path="/admin/categorias/:id/editar" element={panel(<AdminCategoriaForm categorias={categorias} onCrear={crearCategoria} onActualizar={actualizarCategoria} />)} />
+            <Route path="/admin/usuarios" element={panel(<AdminUsuarios usuarios={usuarios} onEliminar={eliminarUsuario} />)} />
+            <Route path="/admin/usuarios/nuevo" element={panel(<AdminUsuarioForm usuarios={usuarios} onCrear={crearUsuario} onActualizar={actualizarUsuario} />)} />
+            <Route path="/admin/usuarios/:id" element={panel(<AdminUsuarioDetalle usuarios={usuarios} />)} />
+            <Route path="/admin/usuarios/:id/editar" element={panel(<AdminUsuarioForm usuarios={usuarios} onCrear={crearUsuario} onActualizar={actualizarUsuario} />)} />
+            <Route path="/admin/reportes" element={panel(<AdminReportes ordenes={ordenes} productos={productos} categorias={categorias} />)} />
 
-          <Route element={<RutaProtegida sesion={sesion} roles={["Administrador"]} />}>
-            {/* El mismo formulario sirve para crear (sin :id) y editar (con :id). */}
-            <Route
-              path="productos/nuevo"
-              element={<AdminProductoForm productos={productos.items} categorias={categorias.items} onCrear={productos.crear} onActualizar={productos.actualizar} />}
-            />
-            <Route path="productos/criticos" element={<AdminProductosCriticos productos={productos.items} categorias={categorias.items} />} />
-            <Route
-              path="productos/:id/editar"
-              element={<AdminProductoForm productos={productos.items} categorias={categorias.items} onCrear={productos.crear} onActualizar={productos.actualizar} />}
-            />
-            <Route
-              path="categorias"
-              element={<AdminCategorias categorias={categorias.items} productos={productos.items} onEliminar={categorias.eliminar} />}
-            />
-            <Route
-              path="categorias/nueva"
-              element={<AdminCategoriaForm categorias={categorias.items} onCrear={categorias.crear} onActualizar={categorias.actualizar} />}
-            />
-            <Route
-              path="categorias/:id/editar"
-              element={<AdminCategoriaForm categorias={categorias.items} onCrear={categorias.crear} onActualizar={categorias.actualizar} />}
-            />
-            <Route path="usuarios" element={<AdminUsuarios usuarios={usuarios.items} sesion={sesion} onEliminar={usuarios.eliminar} />} />
-            <Route
-              path="usuarios/nuevo"
-              element={<AdminUsuarioForm usuarios={usuarios.items} sesion={sesion} onCrear={usuarios.crear} onActualizar={actualizarUsuario} />}
-            />
-            <Route path="usuarios/:id" element={<AdminUsuarioDetalle usuarios={usuarios.items} ordenes={ordenes.items} />} />
-            <Route
-              path="usuarios/:id/editar"
-              element={<AdminUsuarioForm usuarios={usuarios.items} sesion={sesion} onCrear={usuarios.crear} onActualizar={actualizarUsuario} />}
-            />
-            <Route path="reportes" element={<AdminReportes ordenes={ordenes.items} productos={productos.items} categorias={categorias.items} />} />
-          </Route>
-
-          <Route path="*" element={<NoEncontrada />} />
-        </Route>
-      </Route>
-    </Routes>
+            <Route path="*" element={<NoEncontrada />} />
+          </Routes>
+        )}
+      </main>
+      <Footer />
+    </div>
   );
 }
 
