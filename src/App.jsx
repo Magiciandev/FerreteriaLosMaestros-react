@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Alert, Toast, ToastContainer } from "react-bootstrap";
-import { Link, Route, Routes } from "react-router-dom";
+import { Link, Navigate, Route, Routes } from "react-router-dom";
 import Cargando from "./components/Cargando";
 import Footer from "./components/Footer";
 import Header from "./components/Header";
@@ -54,7 +54,8 @@ function App() {
   const [errorCarga, setErrorCarga] = useState("");
   // Sesión: { correo, rol } o null. Viene de sessionStorage (la guarda authService al ingresar).
   const [sesion, setSesion] = useState(authService.obtenerSesion);
-  // Datos del panel (órdenes y usuarios): solo se piden cuando hay un administrador con sesión.
+  // Datos del panel (órdenes y usuarios): solo se piden cuando hay una sesión del personal. El
+  // administrador recibe ambos; el vendedor solo las órdenes.
   const [ordenes, setOrdenes] = useState([]);
   const [usuarios, setUsuarios] = useState([]);
   const [panelCargado, setPanelCargado] = useState(false);
@@ -67,6 +68,7 @@ function App() {
   const [aviso, setAviso] = useState({ id: 0, texto: "", visible: false });
 
   const esAdmin = sesion?.rol === "ADMIN";
+  const esVendedor = sesion?.rol === "VENDEDOR";
 
   useEffect(() => guardarJSON("carrito", carrito), [carrito]);
 
@@ -89,10 +91,14 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (!esAdmin) return;
+    if (!esAdmin && !esVendedor) return;
     async function cargarPanel() {
       try {
-        const [listaOrdenes, listaUsuarios] = await Promise.all([ordenService.listarOrdenes(), usuarioService.listarUsuarios()]);
+        // Al vendedor no se le piden los usuarios: el servidor se los negaría (403).
+        const [listaOrdenes, listaUsuarios] = await Promise.all([
+          ordenService.listarOrdenes(),
+          esAdmin ? usuarioService.listarUsuarios() : Promise.resolve([]),
+        ]);
         setOrdenes(listaOrdenes);
         setUsuarios(listaUsuarios);
       } catch (error) {
@@ -102,7 +108,7 @@ function App() {
       }
     }
     cargarPanel();
-  }, [esAdmin]);
+  }, [esAdmin, esVendedor]);
 
   // ---- Sesión ----
 
@@ -123,13 +129,14 @@ function App() {
     setErrorPanel("");
   }
 
-  // Las páginas del panel se dibujan dentro de PanelAdmin (menú lateral + contenido), y solo si
-  // hay una sesión de administrador; si no, se muestra el aviso de acceso restringido.
-  function panel(pagina) {
-    if (!esAdmin) return <AccesoRestringido />;
+  // Las páginas del panel se dibujan dentro de PanelAdmin (menú lateral + contenido). El
+  // administrador entra a todas; el vendedor solo a las marcadas con { vendedor: true } (lista y
+  // detalle de productos y de órdenes). Con cualquier otra sesión se muestra el acceso restringido.
+  function panel(pagina, { vendedor = false } = {}) {
+    if (!esAdmin && !(esVendedor && vendedor)) return <AccesoRestringido />;
     if (!panelCargado) return <Cargando />;
     return (
-      <PanelAdmin>
+      <PanelAdmin esAdmin={esAdmin}>
         {errorPanel && <Alert variant="danger">{errorPanel}</Alert>}
         {pagina}
       </PanelAdmin>
@@ -264,14 +271,15 @@ function App() {
             />
             <Route path="/checkout" element={<Checkout lineas={lineasCarrito} onConfirmar={confirmarCompra} />} />
 
-            {/* Panel de administración: solo con una sesión de administrador (rol ADMIN). */}
-            <Route path="/admin" element={panel(<AdminDashboard productos={productos} ordenes={ordenes} usuarios={usuarios} />)} />
-            <Route path="/admin/ordenes" element={panel(<AdminOrdenes ordenes={ordenes} />)} />
-            <Route path="/admin/ordenes/:id" element={panel(<AdminOrdenDetalle ordenes={ordenes} />)} />
-            <Route path="/admin/productos" element={panel(<AdminProductos productos={productos} categorias={categorias} onEliminar={eliminarProducto} />)} />
+            {/* Panel: el administrador (ADMIN) ve todo; el vendedor (VENDEDOR) solo la lista y el detalle de
+                productos y de órdenes. */}
+            <Route path="/admin" element={esVendedor ? <Navigate to="/admin/ordenes" replace /> : panel(<AdminDashboard productos={productos} ordenes={ordenes} usuarios={usuarios} />)} />
+            <Route path="/admin/ordenes" element={panel(<AdminOrdenes ordenes={ordenes} />, { vendedor: true })} />
+            <Route path="/admin/ordenes/:id" element={panel(<AdminOrdenDetalle ordenes={ordenes} />, { vendedor: true })} />
+            <Route path="/admin/productos" element={panel(<AdminProductos productos={productos} categorias={categorias} onEliminar={eliminarProducto} soloLectura={!esAdmin} />, { vendedor: true })} />
             <Route path="/admin/productos/nuevo" element={panel(<AdminProductoForm productos={productos} categorias={categorias} onCrear={crearProducto} onActualizar={actualizarProducto} />)} />
             <Route path="/admin/productos/criticos" element={panel(<AdminProductosCriticos productos={productos} categorias={categorias} />)} />
-            <Route path="/admin/productos/:id" element={panel(<AdminProductoDetalle productos={productos} categorias={categorias} />)} />
+            <Route path="/admin/productos/:id" element={panel(<AdminProductoDetalle productos={productos} categorias={categorias} soloLectura={!esAdmin} />, { vendedor: true })} />
             <Route path="/admin/productos/:id/editar" element={panel(<AdminProductoForm productos={productos} categorias={categorias} onCrear={crearProducto} onActualizar={actualizarProducto} />)} />
             <Route path="/admin/categorias" element={panel(<AdminCategorias categorias={categorias} productos={productos} onEliminar={eliminarCategoria} />)} />
             <Route path="/admin/categorias/nueva" element={panel(<AdminCategoriaForm categorias={categorias} onCrear={crearCategoria} onActualizar={actualizarCategoria} />)} />

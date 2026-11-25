@@ -5,8 +5,8 @@ import { Link, NavLink } from "react-router-dom";
 //   categorias      lista de categorías, para el menú desplegable (atajo a cada una)
 //   cantidadCarrito el número que se muestra en el botón del carrito
 //   sesion          el usuario con sesión iniciada ({ correo, rol }) o null
-//                   Con sesión: "Ingresar" pasa a ser "Cerrar sesión"; el administrador además
-//                   ve el enlace al panel
+//                   Con sesión: "Ingresar" pasa a ser "Cerrar sesión"; el administrador y el
+//                   vendedor además ven el enlace al panel
 //   onCerrarSesion  se llama al pulsar "Cerrar sesión"
 // El menú principal es corto (Productos, Categorías, Ofertas); Nosotros, Blog y Contacto viven en
 // el pie de página. Los enlaces con aspecto de botón son <Link className="btn ...">.
@@ -32,6 +32,7 @@ function Header({ categorias, cantidadCarrito = 0, sesion = null, onCerrarSesion
             </NavDropdown>
             <Nav.Link as={NavLink} to="/ofertas">Ofertas</Nav.Link>
             {sesion?.rol === "ADMIN" && <Nav.Link as={NavLink} to="/admin">Administración</Nav.Link>}
+            {sesion?.rol === "VENDEDOR" && <Nav.Link as={NavLink} to="/admin">Panel de ventas</Nav.Link>}
           </Nav>
           <div className="acciones-encabezado d-flex flex-column flex-lg-row align-items-stretch align-items-lg-center gap-2">
             {sesion ? (

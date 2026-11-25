@@ -13,8 +13,9 @@ import { precioFinal, tieneOferta } from "../../utils/productos";
 // Props:
 //   productos        -> arreglo de productos; el que se muestra se busca con el :id de la URL
 //   categorias       -> para mostrar el nombre de la categoría y no su identificador
+//   soloLectura      -> true para el vendedor: se oculta el botón para editar el producto
 // No tiene estado propio: todo se calcula a partir de las props y de la URL.
-function AdminProductoDetalle({ productos, categorias }) {
+function AdminProductoDetalle({ productos, categorias, soloLectura = false }) {
   const { id } = useParams();
   const producto = productos.find((actual) => actual.id === id);
 
@@ -48,7 +49,7 @@ function AdminProductoDetalle({ productos, categorias }) {
         <h1 id="titulo-admin-producto" className="h3 mb-0">{producto.nombre}</h1>
         <div className="d-flex gap-2">
           <Link to="/admin/productos" className="btn btn-outline-secondary">Volver al listado</Link>
-          <Link to={`/admin/productos/${producto.id}/editar`} className="btn btn-primary">Editar producto</Link>
+          {!soloLectura && <Link to={`/admin/productos/${producto.id}/editar`} className="btn btn-primary">Editar producto</Link>}
         </div>
       </div>
 

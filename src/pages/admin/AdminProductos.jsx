@@ -12,8 +12,10 @@ import { filtrarProductos } from "../../utils/productos";
 //   productos          -> arreglo de productos
 //   categorias         -> arreglo de { slug, label }, para el filtro y para mostrar el nombre
 //   onEliminar         -> función que recibe el id del producto y lo borra de la base de datos
+//   soloLectura        -> true para el vendedor: solo puede ver la lista y el detalle, así que se
+//                         ocultan crear, editar, eliminar y el stock crítico
 // Estado propio: lo escrito en el buscador, la categoría elegida y el mensaje de resultado.
-function AdminProductos({ productos, categorias, onEliminar }) {
+function AdminProductos({ productos, categorias, onEliminar, soloLectura = false }) {
   const [mensaje, setMensaje] = useState("");
   const [error, setError] = useState("");
   const [texto, setTexto] = useState("");
@@ -38,10 +40,12 @@ function AdminProductos({ productos, categorias, onEliminar }) {
     <section aria-labelledby="titulo-admin-productos">
       <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
         <h1 id="titulo-admin-productos" className="h3 mb-0">Productos</h1>
-        <div className="d-flex flex-wrap gap-2">
-          <Link to="/admin/productos/criticos" className="btn btn-outline-dark">Stock crítico</Link>
-          <Link to="/admin/productos/nuevo" className="btn btn-primary">Nuevo producto</Link>
-        </div>
+        {!soloLectura && (
+          <div className="d-flex flex-wrap gap-2">
+            <Link to="/admin/productos/criticos" className="btn btn-outline-dark">Stock crítico</Link>
+            <Link to="/admin/productos/nuevo" className="btn btn-primary">Nuevo producto</Link>
+          </div>
+        )}
       </div>
 
       {mensaje && <div className="alert alert-success" role="status">{mensaje}</div>}
@@ -118,21 +122,25 @@ function AdminProductos({ productos, categorias, onEliminar }) {
                   >
                     Ver
                   </Link>
-                  <Link
-                    to={`/admin/productos/${producto.id}/editar`}
-                    className="btn btn-sm btn-outline-dark me-2"
-                    aria-label={`Editar ${producto.nombre}`}
-                  >
-                    Editar
-                  </Link>
-                  <Button
-                    size="sm"
-                    variant="outline-danger"
-                    aria-label={`Eliminar ${producto.nombre}`}
-                    onClick={() => eliminar(producto)}
-                  >
-                    Eliminar
-                  </Button>
+                  {!soloLectura && (
+                    <>
+                      <Link
+                        to={`/admin/productos/${producto.id}/editar`}
+                        className="btn btn-sm btn-outline-dark me-2"
+                        aria-label={`Editar ${producto.nombre}`}
+                      >
+                        Editar
+                      </Link>
+                      <Button
+                        size="sm"
+                        variant="outline-danger"
+                        aria-label={`Eliminar ${producto.nombre}`}
+                        onClick={() => eliminar(producto)}
+                      >
+                        Eliminar
+                      </Button>
+                    </>
+                  )}
                 </td>
               </tr>
             ))}

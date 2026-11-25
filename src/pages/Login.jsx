@@ -42,7 +42,7 @@ function Login({ onIngresar }) {
     }
   }
 
-  if (usuario) return <Navigate to={usuario.rol === "ADMIN" ? "/admin" : "/"} replace />;
+  if (usuario) return <Navigate to={usuario.rol === "ADMIN" || usuario.rol === "VENDEDOR" ? "/admin" : "/"} replace />;
 
   return (
     <Container className="py-5">

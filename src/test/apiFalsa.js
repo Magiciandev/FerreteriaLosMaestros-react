@@ -39,6 +39,7 @@ export function crearApiFalsa(inicial = {}) {
     cuentas: [
       { correo: "admin@profesor.duoc.cl", password: "Cambiar123!", rol: "ADMIN" },
       { correo: "vendedor@duoc.cl", password: "Cambiar123!", rol: "VENDEDOR" },
+      { correo: "luis@gmail.com", password: "Cambiar123!", rol: "CLIENTE" },
     ],
   };
   const forzadas = [];
@@ -62,6 +63,12 @@ export function crearApiFalsa(inicial = {}) {
   const exigirAdmin = (rol) => {
     if (!rol) return respuesta(401);
     return rol === "ADMIN" ? null : respuesta(403, { error: "Acceso denegado" });
+  };
+
+  // Como exigirAdmin, pero también deja pasar al vendedor (puede ver las órdenes).
+  const exigirPersonal = (rol) => {
+    if (!rol) return respuesta(401);
+    return rol === "ADMIN" || rol === "VENDEDOR" ? null : respuesta(403, { error: "Acceso denegado" });
   };
 
   function crearOrden(cuerpo) {
@@ -174,7 +181,7 @@ export function crearApiFalsa(inicial = {}) {
     }
     if (coleccion === "ordenes") {
       if (metodo === "POST") return crearOrden(cuerpo);
-      return exigirAdmin(rol) ?? respuesta(200, datos.ordenes);
+      return exigirPersonal(rol) ?? respuesta(200, datos.ordenes);
     }
     if (coleccion === "consultas" && metodo === "POST") {
       const consulta = { ...cuerpo, id: `C${String(datos.consultas.length + 1).padStart(3, "0")}`, fecha: new Date().toISOString() };

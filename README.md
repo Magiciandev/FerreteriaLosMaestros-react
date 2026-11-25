@@ -13,8 +13,8 @@ React 19, Vite, React Router 7, Bootstrap 5 con react-bootstrap, Vitest con Test
 
    | Variable | Servicio | Valor por defecto |
    |---|---|---|
-   | `VITE_AUTH_API_URL` | ferreteria-auth | `http://localhost:8082/api` |
-   | `VITE_API_URL` | ferreteria-back | `http://localhost:8083/api` |
+   | `VITE_AUTH_API_URL` | ferreteria-auth | `http://localhost:8082/api/v1` |
+   | `VITE_API_URL` | ferreteria-back | `http://localhost:8083/api/v1` |
 
 3. Levantar `ferreteria-auth` y `ferreteria-back`, y luego `npm run dev` (abre en `http://localhost:5173`).
 
@@ -57,8 +57,8 @@ Las pruebas de páginas no necesitan los servicios reales: usan un servidor simu
 
 ## Contrato con el backend
 
-Resumen de lo que el front espera (todas las rutas bajo `/api`):
+Resumen de lo que el front espera (todas las rutas versionadas bajo `/api/v1`):
 
 - **Auth:** `POST /auth/login` devuelve `{ token, correo, rol }`; `POST /auth/registro` crea un cliente; `GET/POST/PUT/DELETE /usuarios` (solo ADMIN).
-- **Tienda:** `GET /categorias` y `GET /productos` son públicos; crear, cambiar y eliminar son de ADMIN. `POST /ordenes` es público (el servidor calcula precios y descuenta stock) y `GET /ordenes` es de ADMIN. `POST /consultas` es público.
+- **Tienda:** `GET /categorias` y `GET /productos` son públicos; crear, cambiar y eliminar son de ADMIN. `POST /ordenes` es público (el servidor calcula precios y descuenta stock) y `GET /ordenes` es de ADMIN y VENDEDOR (el vendedor solo ve la lista y el detalle de productos y de órdenes). `POST /consultas` es público.
 - **Errores:** el servidor responde `{ "error": "mensaje" }` y el front muestra ese texto.

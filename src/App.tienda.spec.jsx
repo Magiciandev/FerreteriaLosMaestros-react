@@ -153,10 +153,10 @@ describe("Tienda", () => {
     expect(sessionStorage.getItem("token")).toBeNull();
   });
 
-  it("C44 otra cuenta (vendedor) ingresa al inicio, sin enlace al panel", async () => {
+  it("C44 una cuenta de cliente ingresa al inicio, sin enlace al panel", async () => {
     const usuario = userEvent.setup();
     await irA("/login");
-    await iniciarSesion(usuario, "vendedor@duoc.cl", "Cambiar123!");
+    await iniciarSesion(usuario, "luis@gmail.com", "Cambiar123!");
     expect(await screen.findByRole("button", { name: /cerrar sesión/i })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: /iniciar sesión/i })).toBeNull();
     expect(screen.queryByRole("link", { name: "Administración" })).toBeNull();
@@ -177,7 +177,7 @@ describe("Tienda", () => {
         sessionStorage.setItem("token", crearToken("ADMIN", "admin@profesor.duoc.cl", -10));
         sessionStorage.setItem("usuario", JSON.stringify({ correo: "admin@profesor.duoc.cl", rol: "ADMIN" }));
       },
-      () => iniciarSesionFalsa("VENDEDOR", "vendedor@duoc.cl"),
+      () => iniciarSesionFalsa("CLIENTE", "luis@gmail.com"),
     ];
     for (const prepararSesion of casos) {
       sessionStorage.clear();
